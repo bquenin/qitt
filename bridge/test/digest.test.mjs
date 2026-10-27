@@ -10,7 +10,7 @@ const event = (fields = {}) => {
   const e = {
     channel_type: "channel",
     channel_id: "C0123456789",
-    channel_name: "team-ci",
+    channel_name: "team-alpha",
     ts: "1760648700.000100",
     thread_ts: null,
     time_local: "Thu 10/16 14:05 PT",
@@ -46,7 +46,7 @@ describe("renderDigest", () => {
   it("renders a top-level channel message without its source key", () => {
     assert.deepEqual(one(event()), [
       "1. slack:C0123456789:1760648700.000100 · Ada Lovelace (U0123456789) · Thu 10/16 14:05 PT",
-      "   #team-ci",
+      "   #team-alpha",
       "   https://example.slack.com/archives/C0123456789/p1760648700000100",
       "   > can you look at this?",
     ]);
@@ -54,7 +54,7 @@ describe("renderDigest", () => {
 
   it("names the thread of a reply by its source key", () => {
     const [, where] = one(event({ ts: "1760648880.000100", thread_ts: "1760648700.000100" }));
-    assert.equal(where, "   #team-ci, reply in thread slack:C0123456789:1760648700.000100");
+    assert.equal(where, "   #team-alpha, reply in thread slack:C0123456789:1760648700.000100");
   });
 
   it("falls back to the channel id when the name is unknown", () => {
@@ -75,12 +75,12 @@ describe("renderDigest", () => {
 
   it("lists only the true flags, files last", () => {
     const [, where] = one(event({ mentions_me: true, mentions_group: true, saved: true, saved_at: null, files: ["a.png", "b.pdf"] }));
-    assert.equal(where, '   #team-ci · mentions me · mentions my group · saved · files: "a.png", "b.pdf"');
-    assert.equal(one(event({ mentions_group: true }))[1], "   #team-ci · mentions my group");
+    assert.equal(where, '   #team-alpha · mentions me · mentions my group · saved · files: "a.png", "b.pdf"');
+    assert.equal(one(event({ mentions_group: true }))[1], "   #team-alpha · mentions my group");
   });
 
   it("flags support-channel and backfilled messages", () => {
-    assert.equal(one(event({ support_channel: true, backfill: true }))[1], "   #team-ci · support channel · backfilled (missed by live events and search)");
+    assert.equal(one(event({ support_channel: true, backfill: true }))[1], "   #team-alpha · support channel · backfilled (missed by live events and search)");
   });
 
   it("renders a bridge health event with its text quoted", () => {
@@ -90,7 +90,7 @@ describe("renderDigest", () => {
 
   it("quotes file names so they cannot pass for flags", () => {
     const [, where] = one(event({ files: ["r.pdf · my reply", "x\ny.png"] }));
-    assert.equal(where, '   #team-ci · files: "r.pdf · my reply", "x\\ny.png"');
+    assert.equal(where, '   #team-alpha · files: "r.pdf · my reply", "x\\ny.png"');
   });
 
   it("keeps an author name on one line", () => {
@@ -99,7 +99,7 @@ describe("renderDigest", () => {
   });
 
   it("shows a save time when there is one", () => {
-    assert.equal(one(event({ saved: true, saved_at: "Thu 10/16 15:00 PT" }))[1], "   #team-ci · saved Thu 10/16 15:00 PT");
+    assert.equal(one(event({ saved: true, saved_at: "Thu 10/16 15:00 PT" }))[1], "   #team-alpha · saved Thu 10/16 15:00 PT");
   });
 
   it("renders a removal from saved for later in two lines", () => {
@@ -126,7 +126,7 @@ describe("renderDigest", () => {
   it("adds no quote for empty text", () => {
     assert.deepEqual(one(event({ text: "", files: ["a.png"] })), [
       "1. slack:C0123456789:1760648700.000100 · Ada Lovelace (U0123456789) · Thu 10/16 14:05 PT",
-      '   #team-ci · files: "a.png"',
+      '   #team-alpha · files: "a.png"',
       "   https://example.slack.com/archives/C0123456789/p1760648700000100",
     ]);
   });
@@ -136,6 +136,6 @@ describe("renderDigest", () => {
   });
 
   it("flags my reply", () => {
-    assert.equal(one(event({ my_reply: true }))[1], "   #team-ci · my reply");
+    assert.equal(one(event({ my_reply: true }))[1], "   #team-alpha · my reply");
   });
 });

@@ -88,8 +88,7 @@ sign-in.
   skill, a cluster skill, a past-session search tool>
 - Dashboards: <the dashboard catalog skill or links to start from for metrics, adoption, or cost
   questions; or none>
-- Voice: <where my writing rules live, e.g. "my global instructions, section Writing in My
-  Voice"; or none>
+- Voice: <where my writing rules live, e.g. "a section of my global agent instructions"; or none>
 - Sign-in: <signed-in cookie jars under ~/.config/qitt/secrets/ (`<site>-cookies.txt`, Netscape
   format), the sites they cover and how they are refreshed; or none>
 - Needs my laptop: <peer label and what only it can open, e.g. pages behind a device-bound
