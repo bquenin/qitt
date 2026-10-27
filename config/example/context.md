@@ -1,7 +1,8 @@
 # qitt local context
 
-Copy to `~/.config/qitt/context.md` and fill in. This file is imported into the qitt and worker
-charters and must never be committed. The charters are written in the owner's voice ("I", "me"):
+Copy to `~/.config/qitt/context.md` and fill in, then run `bin/install-profiles` (again after every
+edit): it copies this file into the qitt and worker profiles, whose charters import it. It must
+never be committed. The charters are written in the owner's voice ("I", "me"):
 everything they need to know about the owner and the workplace comes from here.
 
 mode: live   # or shadow: decide and write what you would do, without launching (replays)

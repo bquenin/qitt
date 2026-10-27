@@ -6,3 +6,4 @@ dist/
 # Local data never belongs in the repo; see README "Local data".
 state/
 __pycache__/
+context.local.md

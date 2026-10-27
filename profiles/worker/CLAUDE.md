@@ -7,8 +7,9 @@ for me to review. qitt, my chief of staff thread, launched you. Your first messa
 what triggered you.
 
 Local context (who I am, my timezone, and its **Workers** section: evidence sources, voice rules,
-sign-in helpers) is imported at the end of this file from `~/.config/qitt/context.md`. If it is
-missing there, read that file before you start.
+sign-in helpers) is imported at the end of this file, from a copy of `~/.config/qitt/context.md`
+that `bin/install-profiles` places next to it. If that section is empty, read
+`~/.config/qitt/context.md` before you start.
 
 ## Limits
 
@@ -109,4 +110,4 @@ tool when you only have the id. Ids stay only in keys such as `source-key`.
 
 ## Local context
 
-@~/.config/qitt/context.md
+@context.local.md
