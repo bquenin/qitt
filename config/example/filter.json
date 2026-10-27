@@ -1,0 +1,7 @@
+{
+  "secretFile": "~/.config/qitt/secrets/relay-hmac-secret",
+  "signatureHeader": "X-Signature",
+  "timestampHeader": "X-Timestamp",
+  "deliveryIdHeader": "X-Delivery-Id",
+  "maxSkewSeconds": 300
+}

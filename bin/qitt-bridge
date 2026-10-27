@@ -1,0 +1,58 @@
+#!/usr/bin/env bash
+# Keep the qitt Slack bridge running, detached from any session.
+#   qitt-bridge          start if not running; say what happened
+#   qitt-bridge ensure   same, silent, always exits 0 (for ~/.profile)
+#   qitt-bridge stop     stop it
+set -u
+
+repo=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)
+script=$repo/bridge/slack-bridge.mjs
+lock=$HOME/.local/state/qitt/slack-bridge.lock
+pidfile=$HOME/.local/state/qitt/slack-bridge.supervisor.pid
+log=$HOME/.local/state/qitt/logs/slack-bridge.log
+mkdir -p "$(dirname "$lock")"
+
+quiet=0
+[[ ${1:-} == ensure ]] && quiet=1
+say() { [[ $quiet -eq 1 ]] || echo "$*"; }
+fail() {
+  say "$*"
+  [[ $quiet -eq 1 ]] && exit 0
+  exit 1
+}
+
+running() { pgrep -u "$(id -u)" -f "node $script" >/dev/null; }
+
+if [[ ${1:-} == stop ]]; then
+  stopped=0
+  # Only signal the saved pid if it is still our supervisor; a stale file may name another process.
+  pid=$(cat "$pidfile" 2>/dev/null || true)
+  if [[ -n $pid ]] && tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null | grep -qF "supervisor $pidfile"; then
+    kill "$pid" && stopped=1
+  fi
+  pkill -u "$(id -u)" -f "node $script" && stopped=1
+  rm -f "$pidfile"
+  [[ $stopped -eq 1 ]] && say "stopped" || say "not running"
+  exit 0
+fi
+
+if running; then
+  say "already running"
+  exit 0
+fi
+
+[[ -d $repo/bridge/node_modules ]] || fail "dependencies missing; run: npm ci --prefix $repo/bridge"
+
+# flock keeps two logins from starting two bridges; the lock dies with the supervisor. The
+# supervisor restarts the bridge 15 s after any exit, so a crash does not wait for the next login.
+supervise='echo $$ > "$1"; trap "rm -f \"$1\"" EXIT; trap "kill \$child 2>/dev/null; exit 0" TERM
+while :; do node "$2" & child=$!; wait "$child"; sleep 15 & child=$!; wait "$child"; done'
+setsid -f flock -n "$lock" bash -c "$supervise" supervisor "$pidfile" "$script" </dev/null >/dev/null 2>&1
+# A bad token or config exits within a few seconds; still running after that means connected
+# or retrying.
+sleep 0.5
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  running || fail "failed to start; see $log"
+  sleep 0.3
+done
+say "running"

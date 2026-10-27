@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Mute or unmute a Slack conversation for the bridge; see bridge/mute.mjs. One edit at a time:
+# the lock covers the whole read-change-write, so overlapping commands never lose a change.
+set -euo pipefail
+
+repo=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)
+file=${QITT_MUTED_FILE:-$HOME/.local/state/qitt/muted.json}
+umask 077
+mkdir -p "$(dirname "$file")"
+exec 9>>"$file.lock"
+flock -w 10 9 || { echo "qitt-mute: $file is locked by another qitt-mute" >&2; exit 1; }
+QITT_MUTED_FILE=$file node "$repo/bridge/mute.mjs" "$@"

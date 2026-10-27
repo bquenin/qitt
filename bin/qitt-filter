@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+# Keep the qitt hook filter running, detached from any session.
+#   qitt-filter          start if not running; say what happened
+#   qitt-filter ensure   same, silent, always exits 0 (for ~/.profile)
+#   qitt-filter stop     stop it
+set -u
+
+repo=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)
+port=${QITT_FILTER_PORT:-3780}
+lock=$HOME/.local/state/qitt/hook-filter.lock
+pidfile=$HOME/.local/state/qitt/hook-filter.supervisor.pid
+logs=$HOME/.local/state/qitt/logs
+mkdir -p "$logs"
+
+quiet=0
+[[ ${1:-} == ensure ]] && quiet=1
+say() { [[ $quiet -eq 1 ]] || echo "$*"; }
+
+running() { ss -ltn "sport = :$port" | grep -q LISTEN; }
+
+if [[ ${1:-} == stop ]]; then
+  stopped=0
+  # Only signal the saved pid if it is still our supervisor; a stale file may name another process.
+  pid=$(cat "$pidfile" 2>/dev/null || true)
+  if [[ -n $pid ]] && tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null | grep -qF "supervisor $pidfile"; then
+    kill "$pid" && stopped=1
+  fi
+  pkill -u "$(id -u)" -f "$repo/filter/hook-filter.mjs" && stopped=1
+  rm -f "$pidfile"
+  [[ $stopped -eq 1 ]] && say "stopped" || say "not running"
+  exit 0
+fi
+
+if running; then
+  say "already listening on :$port"
+  exit 0
+fi
+
+# flock keeps two logins from starting two filters; the lock dies with the supervisor, which
+# restarts the filter 15 s after any exit. stderr goes to a file so a crash before the filter
+# opens its own log is still visible.
+supervise='echo $$ > "$1"; trap "rm -f \"$1\"" EXIT; trap "kill \$child 2>/dev/null; exit 0" TERM
+while :; do node "$2" & child=$!; wait "$child"; sleep 15 & child=$!; wait "$child"; done'
+setsid -f flock -n "$lock" bash -c "$supervise" supervisor "$pidfile" "$repo/filter/hook-filter.mjs" \
+  </dev/null >/dev/null 2>>"$logs/hook-filter.stderr.log"
+for _ in 1 2 3 4 5 6 7 8 9 10; do
+  running && { say "listening on :$port"; exit 0; }
+  sleep 0.3
+done
+say "failed to start; see $logs/hook-filter.stderr.log and $logs/hook-filter.log"
+[[ $quiet -eq 1 ]] && exit 0
+exit 1

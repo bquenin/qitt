@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+*.log
+*.db
+# Local data never belongs in the repo; see README "Local data".
+state/
+__pycache__/

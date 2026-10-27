@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+# Install the qitt and worker T3 project roots from profiles/ into ~/.local/state/qitt/projects/.
+# Copies, so editing the repo does not change running threads until you reinstall.
+#
+# The profiles deny the Slack MCP server's send tools by name (mcp__<server>__...). Set
+# QITT_SLACK_MCP_SERVER if your Slack MCP server is not named slack-cli.
+set -euo pipefail
+
+repo=$(cd "$(dirname "$0")/.." && pwd)
+dest=${QITT_PROJECTS_DIR:-$HOME/.local/state/qitt/projects}
+slack_mcp=${QITT_SLACK_MCP_SERVER:-slack-cli}
+if [[ ! $slack_mcp =~ ^[A-Za-z0-9_-]+$ ]]; then
+  echo "QITT_SLACK_MCP_SERVER must be an MCP server name (letters, digits, - and _)" >&2
+  exit 1
+fi
+
+for profile in qitt worker; do
+  src=$repo/profiles/$profile
+  dst=$dest/$profile
+  mkdir -p "$dst/.claude"
+  install -m 0644 "$src/CLAUDE.md" "$dst/CLAUDE.md"
+  sed "s/mcp__slack-cli__/mcp__${slack_mcp}__/g" "$src/.claude/settings.json" >|"$dst/.claude/settings.json.tmp"
+  chmod 0644 "$dst/.claude/settings.json.tmp"
+  mv -f "$dst/.claude/settings.json.tmp" "$dst/.claude/settings.json"
+  # Shared skills (skills/<name>/) go into every profile; replace so removed skills disappear.
+  rm -rf "$dst/.claude/skills"
+  if [[ -d $repo/skills ]]; then
+    mkdir -p "$dst/.claude/skills"
+    cp -R "$repo/skills/." "$dst/.claude/skills/"
+  fi
+  echo "installed $dst"
+done
+
+if [[ ! -f $HOME/.config/qitt/context.md ]]; then
+  echo "note: ~/.config/qitt/context.md is missing; start from config/example/context.md" >&2
+fi

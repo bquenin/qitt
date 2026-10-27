@@ -1,0 +1,13 @@
+{
+  "me": "U000ME",
+  "groups": ["S000GROUP"],
+  "watchChannels": ["C000WATCH"],
+  "supportChannels": ["C000SUPPORT"],
+  "ignoreBots": true,
+  "batchWindowSeconds": 20,
+  "savedPollSeconds": 300,
+  "searchPollSeconds": 60,
+  "reconcileMinutes": 15,
+  "timezone": "America/New_York",
+  "webhookUrlFile": "~/.config/qitt/secrets/webhook-slack.local.url"
+}

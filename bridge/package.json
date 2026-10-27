@@ -1,0 +1,17 @@
+{
+  "name": "qitt-slack-bridge",
+  "private": true,
+  "type": "module",
+  "description": "Socket Mode intake that filters, batches, and posts Slack events to qitt's T3 webhook.",
+  "engines": {
+    "node": ">=22.19.0"
+  },
+  "scripts": {
+    "start": "node slack-bridge.mjs",
+    "test": "node --test \"test/*.test.mjs\""
+  },
+  "dependencies": {
+    "@slack/socket-mode": "^3.1.0",
+    "@slack/web-api": "^8.2.0"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "autoCompactWindow": 150000,
+  "permissions": {
+    "deny": [
+      "mcp__slack-cli__slack_send_message",
+      "mcp__slack-cli__slack_schedule_message"
+    ]
+  }
+}
