@@ -249,7 +249,7 @@ that has not repeated for more than an hour has cleared; `search_disabled` lasts
 {
   "id": "<batch uuid>",
   "count": 1,
-  "window": "14:05–14:05 PT",
+  "window": "17:05–17:05 ET",
   "events": [
     {
       "id": "slack:<channel>:<ts>",
@@ -260,7 +260,7 @@ that has not repeated for more than an hour has cleared; `search_disabled` lasts
       "ts": "<ts>",
       "thread_ts": null,
       "source_key": "slack:<channel>:<thread_ts or ts>",
-      "time_local": "Thu 10/16 14:05 PT",
+      "time_local": "Thu 10/16 17:05 ET",
       "user_id": "<user>",
       "user_name": "<display name or real name>",
       "mentions_me": true,
@@ -275,7 +275,7 @@ that has not repeated for more than an hour has cleared; `search_disabled` lasts
 ```
 
 `window` spans the earliest to the latest message in the batch. Times are in `timezone` with its
-label (`America/Los_Angeles`, `PT`, in these examples). The webhook task's prompt
+label (`America/New_York`, `ET`, in these examples). The webhook task's prompt
 (`prompts/intake-slack.md`) reads only `digest` (`lib/digest.mjs`): one placeholder, so T3 frames
 the batch as untrusted data once, and plain text instead of pretty-printed JSON, which costs far
 fewer tokens. `events` stays in the body for `--dry-run` and tests. Each event becomes:
@@ -283,8 +283,8 @@ fewer tokens. `events` stays in the body for `--dry-run` and tests. Each event b
 ```
 1 event.
 
-1. slack:C0123456789:1760648700.000100 · Ada Lovelace (U0123456789) · Thu 10/16 14:05 PT
-   #team-ci, reply in thread slack:C0123456789:1760648600.000100 · mentions me · files: "a.png"
+1. slack:C0123456789:1760648700.000100 · Ada Lovelace (U0123456789) · Thu 10/16 17:05 ET
+   #team-alpha, reply in thread slack:C0123456789:1760648600.000100 · mentions me · files: "a.png"
    https://example.slack.com/archives/C0123456789/p1760648700000100?thread_ts=1760648600.000100
    > every line of the text, quoted
 ```

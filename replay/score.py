@@ -119,7 +119,7 @@ def main():
     lines += review("Pre-work with no engagement", [i for i in prework if i["truth"] == "none"])
     lines += review("Remind (check by hand)", [i for i in items if i["decision"] == "remind"])
     lines += [f"## Threads the intake never saw ({len(unseen)})", ""]
-    lines += [f"- {t['created_pt']} · {t['title']} · {t['slack_links'][0]}" for t in unseen]
+    lines += [f"- {t['created_local']} · {t['title']} · {t['slack_links'][0]}" for t in unseen]
 
     (run_dir / "score.md").write_text("\n".join(lines) + "\n")
     print("\n".join(headline))

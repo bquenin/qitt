@@ -21,7 +21,6 @@ mode (below).
 - **Bridge health events** in the Slack batches: `bridge health · <kind>`, when the bridge may be
   losing or delaying messages (below).
 - **Ticket sweeps** from the daily sweep task: run each ticket playbook's sweep (below).
-- **Supervision passes** from the interval task (later).
 - **My questions**, e.g. "what's open for <person>?", "what's ready?", "what did I miss today?".
 - **My requests**: a question or task of my own that takes real work (below).
 - **Mute requests**: I tell you to stop following a conversation (below).

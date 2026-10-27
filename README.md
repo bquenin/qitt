@@ -17,11 +17,11 @@ JIRA → HMAC-signing webhook relay → hook filter (/api/hooks/* only) ──�
         ▲                                                                     │
         └────────────── worker posts "ready / blocked" via t3_thread_send ────┘
   + weekday ticket sweep task on qitt: playbook tickets the intake misses
-  + interval scheduled task on qitt: supervision pass + JQL backstop
+  + planned: interval supervision pass + JQL backstop (not in this repo yet)
 ```
 
-- **T3 constructs only.** qitt is a thread; intake and supervision are scheduled tasks bound to it.
-  Code outside T3 exists only where something must hold a connection.
+- **T3 constructs only.** qitt is a thread; intake and the ticket sweep are scheduled tasks bound to
+  it. Code outside T3 exists only where something must hold a connection.
 - **Never sends.** Output is proposed text; Slack send and schedule are denied in the profiles.
   Workers are research-only, except the routine JIRA field edits a ticket playbook lists.
 - **Runs on one always-on machine.** Events that arrive while it is down are lost, by design.

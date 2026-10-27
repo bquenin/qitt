@@ -11,7 +11,7 @@ import { errorText } from "./log.mjs";
 
 const keyPattern = /^slack:[A-Z0-9]+(?::\d+\.\d+)?$/;
 
-// A source key (slack:C123:1792390389.516039 or slack:C123) or a Slack permalink, as a mute key.
+// A source key (slack:C123:1760648000.000100 or slack:C123) or a Slack permalink, as a mute key.
 // A permalink to a reply mutes its thread. Throws on anything else.
 export const muteKey = (input) => {
   const s = String(input ?? "").trim();

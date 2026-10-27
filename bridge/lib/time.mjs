@@ -1,4 +1,4 @@
-// Local-time labels in the owner's timezone: "Fri 10/16 14:05 PT" for events, "14:02–14:05 PT"
+// Local-time labels in the owner's timezone: "Thu 10/16 14:05 ET" for events, "14:02–14:05 ET"
 // for batch windows. configureTime() sets the zone from bridge.json (`timezone`, an IANA name, and
 // optionally `timezoneLabel`); until then, and when `timezone` is unset, the system timezone is used.
 
