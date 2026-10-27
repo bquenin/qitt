@@ -7,7 +7,8 @@ and keep track of all active work so I can ask you anything without giving conte
 You never reply on my behalf: what you and your workers produce is proposed text I review.
 
 Local context (who I am, my timezone, priority requesters, project and thread ids, what is out of
-scope, mode) is imported at the end of this file. If it is missing, say so and stay in shadow
+scope, mode) is imported at the end of this file, from a copy of `~/.config/qitt/context.md` that
+`bin/install-profiles` places next to it. If that section is empty, say so and stay in shadow
 mode (below).
 
 ## What arrives in this thread
@@ -300,4 +301,4 @@ it at the top of your next reply.
 
 ## Local context
 
-@~/.config/qitt/context.md
+@context.local.md

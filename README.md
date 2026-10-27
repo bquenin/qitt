@@ -32,7 +32,7 @@ JIRA → HMAC-signing webhook relay → hook filter (/api/hooks/* only) ──�
 | --- | --- |
 | `profiles/` | T3 project roots for qitt and its workers: charter (`CLAUDE.md`) and `.claude/settings.json`: a minimal deny list, and for qitt a 150k auto-compact window (every call re-reads the whole thread, and its durable state lives in the threads, not its context). |
 | `skills/` | Skills installed into both profiles (e.g. `google-docs`: read Google Docs with the gws CLI). |
-| `bin/` | `install-profiles` copies the profiles into place; `qitt-filter` and `qitt-bridge` keep the filter and the Slack bridge running; `qitt-mute` mutes Slack conversations for the bridge. |
+| `bin/` | `install-profiles` copies the profiles and your local `context.md` into place (re-run it after editing either); `qitt-filter` and `qitt-bridge` keep the filter and the Slack bridge running; `qitt-mute` mutes Slack conversations for the bridge. |
 | `prompts/` | Prompt templates for the scheduled tasks: intake webhooks and the ticket sweep. |
 | `docs/` | `setup.md`: how the thread, intake tasks, and endpoint are wired, and every config key. |
 | `bridge/` | `slack-bridge`: Socket Mode client that filters, batches, and posts events to qitt's webhook. See [bridge/README.md](bridge/README.md). |
@@ -71,4 +71,5 @@ results) stays on the machine and is never committed:
 ```bash
 npm test --prefix bridge
 node --test "filter/test/*.test.mjs"
+node --test "bin/test/*.test.mjs"
 ```

@@ -10,6 +10,15 @@ once (`qitt`, `qitt workers`) and put the workers project id in `~/.config/qitt/
 `QITT_SLACK_MCP_SERVER` when running it if your Slack MCP server is not named `slack-cli` (see the
 README, Dependencies).
 
+The installer also copies `~/.config/qitt/context.md` into each root as `context.local.md`
+(mode 600), which the charters import as `@context.local.md`. Claude Code loads imports from
+inside the project without asking, but an import from outside it (including through a symlink)
+needs an approval that headless threads never give, so the file is copied. **Re-run
+`bin/install-profiles` after editing `context.md`**; threads started afterwards see the new
+version. `QITT_CONTEXT=<path>` installs another file (for tests). If the file is missing, the
+installer warns and leaves the import out, and the charters fall back: workers read
+`~/.config/qitt/context.md` themselves, and qitt stays in shadow mode.
+
 ## The qitt thread
 
 Launch a thread in the qitt project, pin it, and have it create its own intake tasks (a webhook
@@ -65,7 +74,7 @@ Start from `config/example/`. Nothing here is committed.
 
 | File | What |
 | --- | --- |
-| `~/.config/qitt/context.md` | Imported into both charters: who the owner is (name, first name, timezone, ids), T3 project and thread ids, peer environments, user groups, support channels, systems owned, priority requesters, out-of-scope requests, ticket playbooks, bots, remind-only topics, and a **Workers** section (evidence sources, dashboards, voice rules, sign-in helpers, what needs the laptop). |
+| `~/.config/qitt/context.md` | Copied into both profiles by `bin/install-profiles` and imported by the charters (re-run it after editing): who the owner is (name, first name, timezone, ids), T3 project and thread ids, peer environments, user groups, support channels, systems owned, priority requesters, out-of-scope requests, ticket playbooks, bots, remind-only topics, and a **Workers** section (evidence sources, dashboards, voice rules, sign-in helpers, what needs the laptop). |
 | `~/.config/qitt/bridge.json` | Slack bridge config. Keys in [bridge/README.md](../bridge/README.md#local-files), including `timezone` and `timezoneLabel`. |
 | `~/.config/qitt/filter.json` | Optional hook filter config; every key has a default (below). |
 | `~/.config/qitt/secrets/` | Slack tokens, webhook URLs, the relay's HMAC secret, cookie jars (mode 600). |

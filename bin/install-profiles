@@ -1,6 +1,13 @@
 #!/usr/bin/env bash
-# Install the qitt and worker T3 project roots from profiles/ into ~/.local/state/qitt/projects/.
-# Copies, so editing the repo does not change running threads until you reinstall.
+# Install the qitt and worker T3 project roots from profiles/ into ~/.local/state/qitt/projects/
+# (QITT_PROJECTS_DIR overrides). Copies, so editing the repo does not change new threads until you
+# reinstall.
+#
+# Each charter imports the owner's local context as @context.local.md, a copy of
+# ~/.config/qitt/context.md (QITT_CONTEXT overrides) placed in the profile. Claude Code expands
+# imports only from inside the project without asking, and resolves symlinks before deciding, so
+# this is a copy, not a link: re-run this script after editing context.md. Without a context file
+# the import line is left out and the charters' fallback applies.
 #
 # The profiles deny the Slack MCP server's send tools by name (mcp__<server>__...). Set
 # QITT_SLACK_MCP_SERVER if your Slack MCP server is not named slack-cli.
@@ -9,6 +16,11 @@ set -euo pipefail
 repo=$(cd "$(dirname "$0")/.." && pwd)
 dest=${QITT_PROJECTS_DIR:-$HOME/.local/state/qitt/projects}
 slack_mcp=${QITT_SLACK_MCP_SERVER:-slack-cli}
+context=${QITT_CONTEXT:-$HOME/.config/qitt/context.md}
+if [[ -n ${QITT_CONTEXT:-} && ! -f $QITT_CONTEXT ]]; then
+  echo "QITT_CONTEXT=$QITT_CONTEXT is not a file" >&2
+  exit 1
+fi
 if [[ ! $slack_mcp =~ ^[A-Za-z0-9_-]+$ ]]; then
   echo "QITT_SLACK_MCP_SERVER must be an MCP server name (letters, digits, - and _)" >&2
   exit 1
@@ -18,7 +30,15 @@ for profile in qitt worker; do
   src=$repo/profiles/$profile
   dst=$dest/$profile
   mkdir -p "$dst/.claude"
-  install -m 0644 "$src/CLAUDE.md" "$dst/CLAUDE.md"
+  if [[ -f $context ]]; then
+    install -m 0600 "$context" "$dst/context.local.md"
+    install -m 0644 "$src/CLAUDE.md" "$dst/CLAUDE.md"
+  else
+    rm -f "$dst/context.local.md"
+    grep -vx '@context.local.md' "$src/CLAUDE.md" >|"$dst/CLAUDE.md.tmp"
+    chmod 0644 "$dst/CLAUDE.md.tmp"
+    mv -f "$dst/CLAUDE.md.tmp" "$dst/CLAUDE.md"
+  fi
   sed "s/mcp__slack-cli__/mcp__${slack_mcp}__/g" "$src/.claude/settings.json" >|"$dst/.claude/settings.json.tmp"
   chmod 0644 "$dst/.claude/settings.json.tmp"
   mv -f "$dst/.claude/settings.json.tmp" "$dst/.claude/settings.json"
@@ -31,6 +51,9 @@ for profile in qitt worker; do
   echo "installed $dst"
 done
 
-if [[ ! -f $HOME/.config/qitt/context.md ]]; then
-  echo "note: ~/.config/qitt/context.md is missing; start from config/example/context.md" >&2
+if [[ -f $context ]]; then
+  echo "local context copied from $context; re-run after editing it"
+else
+  echo "warning: $context is missing, so the charters import no local context;" \
+    "start from config/example/context.md, then re-run" >&2
 fi
