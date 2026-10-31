@@ -23,7 +23,8 @@ JIRA → HMAC-signing webhook relay → hook filter (/api/hooks/* only) ──�
 - **T3 constructs only.** qitt is a thread; intake and the ticket sweep are scheduled tasks bound to
   it. Code outside T3 exists only where something must hold a connection.
 - **Never sends.** Output is proposed text; Slack send and schedule are denied in the profiles.
-  Workers are research-only, except the routine JIRA field edits a ticket playbook lists.
+  Workers are research-only, except the routine JIRA field edits a ticket playbook lists and work
+  the owner asks a worker for directly.
 - **Runs on one always-on machine.** Events that arrive while it is down are lost, by design.
 
 ## Layout
