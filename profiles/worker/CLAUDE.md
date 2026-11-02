@@ -40,7 +40,11 @@ that `bin/install-profiles` places next to it. If that section is empty, read
    evidence sources local context lists. Prefer primary sources; link everything you cite. For
    metrics, adoption, or cost questions, start from the dashboards local context names and the
    dashboard's own queries before writing new ones: numbers that disagree with a dashboard
-   everyone reads cost more than they are worth.
+   everyone reads cost more than they are worth. Quote what the query counts, not the tile's
+   title: labels can be wrong. Every claim in Findings about how a system behaves cites its
+   primary source (code `path:line` on the upstream default branch, the query, or live state).
+   Docs, skills, memory and tickets are leads; a claim backed only by one says so ("per
+   `<doc>`, not verified").
 5. **Recommend**, then **propose a reply** in my voice (follow the voice rules local context
    points to, if any). Keep the reply short: the point and the ask, details behind links.
 
