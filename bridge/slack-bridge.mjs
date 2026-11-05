@@ -5,10 +5,12 @@
 //   node slack-bridge.mjs             run (bin/qitt-bridge keeps it running detached)
 //   node slack-bridge.mjs --dry-run   print each batch body to stdout instead of POSTing
 //
-// The Slack app subscribes to DMs and group DMs only; channel messages (mentions, my threads,
-// watched channels) come from polling search (lib/search.mjs), which also catches up DMs the
-// socket missed. It also polls my saved-for-later items (lib/saved.mjs) and batches newly saved
-// ones, and sends my own messages in conversations qitt has heard about (lib/conversations.mjs).
+// The Slack app subscribes to messages in my DMs, group DMs and channels, so they arrive live.
+// Slack caps live events at 30,000 per workspace per hour and drops the rest; polling search
+// (lib/search.mjs) catches up what the socket missed, and live traffic is counted to find what
+// uses the budget up (lib/traffic.mjs). It also polls my saved-for-later items (lib/saved.mjs)
+// and batches newly saved ones, and sends my own messages in conversations qitt has heard about
+// (lib/conversations.mjs).
 // Conversations muted with bin/qitt-mute are dropped unless a message mentions me (lib/muted.mjs).
 // A reconciler reads the conversations I am in straight from Slack and backfills what live events
 // and search missed (lib/reconcile.mjs); problems that can lose messages reach qitt as bridge
@@ -36,6 +38,7 @@ import { Reconciler, reconcileStatePath } from "./lib/reconcile.mjs";
 import { SavedPoller, stateFilePath } from "./lib/saved.mjs";
 import { SearchPoller, searchStatePath } from "./lib/search.mjs";
 import { configureTime } from "./lib/time.mjs";
+import { Traffic } from "./lib/traffic.mjs";
 
 const dryRun = process.argv.includes("--dry-run");
 const configDir = join(homedir(), ".config/qitt");
@@ -138,9 +141,12 @@ const saved = new SavedPoller({
   log,
 });
 
+const traffic = cfg.trafficReportMinutes ? new Traffic({ me: cfg.me, log, reportMinutes: cfg.trafficReportMinutes }) : null;
+
 const socket = new SocketModeClient({ appToken, logger: slackLog });
-guardSocket(socket, log, (kind) => {
+guardSocket(socket, log, (kind, info) => {
   if (kind !== "app_rate_limited") return;
+  traffic?.rateLimited(info);
   search.catchUp("app_rate_limited");
   health.rateLimited();
 });
@@ -152,6 +158,7 @@ socket.on("slack_event", async ({ ack, type, body }) => {
     log(`ack failed: ${errorText(err)}`);
   }
   if (type !== "events_api") return;
+  traffic?.count(body);
   try {
     await handle(body);
   } catch (err) {
@@ -170,7 +177,8 @@ try {
 } catch (err) {
   fatal("socket mode start", err);
 }
-log(`started${dryRun ? " (dry run)" : ""}: timezone ${cfg.timezone}, window ${cfg.batchWindowSeconds}s, ${cfg.groups.length} groups, ${cfg.watchChannels.length} watched channels, ${cfg.supportChannels.length} support channels, saved poll ${cfg.savedPollSeconds ? `${cfg.savedPollSeconds}s` : "off"}, search poll ${cfg.searchPollSeconds ? `${cfg.searchPollSeconds}s` : "off"}, reconcile ${cfg.reconcileMinutes ? `${cfg.reconcileMinutes}m` : "off"}`);
+log(`started${dryRun ? " (dry run)" : ""}: timezone ${cfg.timezone}, window ${cfg.batchWindowSeconds}s, ${cfg.groups.length} groups, ${cfg.watchChannels.length} watched channels, ${cfg.supportChannels.length} support channels, saved poll ${cfg.savedPollSeconds ? `${cfg.savedPollSeconds}s` : "off"}, search poll ${cfg.searchPollSeconds ? `${cfg.searchPollSeconds}s` : "off"}, reconcile ${cfg.reconcileMinutes ? `${cfg.reconcileMinutes}m` : "off"}, traffic ${cfg.trafficReportMinutes ? `${cfg.trafficReportMinutes}m` : "off"}`);
 search.start();
 saved.start();
 reconciler.start();
+traffic?.start();

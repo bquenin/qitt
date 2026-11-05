@@ -19,6 +19,7 @@ describe("config", () => {
       savedPollSeconds: 300,
       searchPollSeconds: 60,
       reconcileMinutes: 15,
+      trafficReportMinutes: 10,
       timezone: systemTimezone(),
       timezoneLabel: null,
       webhookUrlFile: join(homedir(), ".config/qitt/secrets/webhook-slack.local.url"),
@@ -34,6 +35,8 @@ describe("config", () => {
     assert.throws(() => parseConfig({ me: "U000ME", savedPollSeconds: "300" }), /savedPollSeconds/);
     assert.throws(() => parseConfig({ me: "U000ME", searchPollSeconds: -1 }), /searchPollSeconds/);
     assert.throws(() => parseConfig({ me: "U000ME", reconcileMinutes: -1 }), /reconcileMinutes/);
+    assert.throws(() => parseConfig({ me: "U000ME", trafficReportMinutes: -1 }), /trafficReportMinutes/);
+    assert.throws(() => parseConfig({ me: "U000ME", trafficReportMinutes: 61 }), /trafficReportMinutes/);
     assert.throws(() => parseConfig({ me: "U000ME", timezone: "Mars/Olympus" }), /timezone must be an IANA/);
     assert.throws(() => parseConfig({ me: "U000ME", timezone: 1 }), /timezone must be an IANA/);
     assert.throws(() => parseConfig({ me: "U000ME", timezoneLabel: "" }), /timezoneLabel/);

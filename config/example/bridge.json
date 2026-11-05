@@ -8,6 +8,7 @@
   "savedPollSeconds": 300,
   "searchPollSeconds": 60,
   "reconcileMinutes": 15,
+  "trafficReportMinutes": 10,
   "timezone": "America/New_York",
   "webhookUrlFile": "~/.config/qitt/secrets/webhook-slack.local.url"
 }

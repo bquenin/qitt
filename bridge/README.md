@@ -1,8 +1,8 @@
 # slack-bridge
 
 The only long-running qitt process. It holds a Slack Socket Mode connection for a user-scoped
-Slack app (DMs and group DMs), polls Slack search for the rest (mentions, my threads, watched
-channels), keeps the messages qitt should see, and POSTs them in batches to the qitt thread's T3
+Slack app (messages in my DMs, group DMs and channels), polls Slack search for what the socket
+misses, keeps the messages qitt should see, and POSTs them in batches to the qitt thread's T3
 webhook on localhost. It reads Slack and never writes to it.
 
 ## Slack app
@@ -12,11 +12,12 @@ webhook on localhost. It reads Slack and never writes to it.
   (thread lookups), `users:read`, `search:read` (search intake and saved for later; without it both
   pollers turn themselves off). Optional: `channels:read`, `groups:read` (names of channels in live
   events; search matches carry their own).
-- User event subscriptions: `message.im` and `message.mpim` only. Do not subscribe to
-  `message.channels` or `message.groups`: Slack caps an app at 30,000 events per workspace per hour,
-  every message in every channel I can see counts against it, and over the cap Slack sends
-  `app_rate_limited` once a minute and drops events, DMs included. Channel messages come from
-  search instead; see Search intake.
+- User event subscriptions: `message.im`, `message.mpim`, `message.channels`, `message.groups`, so
+  channel messages arrive within seconds. Slack caps an app at 30,000 events per workspace per
+  hour, and every message in every channel I am in counts against it. Over the cap Slack sends
+  `app_rate_limited` once a minute and drops live events, DMs included, while search catches up
+  (see Search intake). The `traffic` log lines (see Traffic) show which channels use the cap up;
+  leaving busy channels I do not read is the only way to lower it.
 
 ## Local files
 
@@ -47,10 +48,12 @@ Nothing here is committed.
 - `ignoreBots` (default `true`): drop messages with `bot_id` or subtype `bot_message`.
 - `batchWindowSeconds` (default `20`): how long a batch collects after its first event.
 - `savedPollSeconds` (default `300`): how often to poll saved-for-later items; `0` turns the poller off.
-- `searchPollSeconds` (default `60`): how often to poll search for channel messages and missed DMs;
-  `0` turns it off, which leaves only live DMs.
+- `searchPollSeconds` (default `60`): how often to poll search for messages live events missed;
+  `0` turns it off, which leaves only live events.
 - `reconcileMinutes` (default `15`): how often the reconciler reads my conversations from Slack and
   backfills what live events and search missed; `0` turns it off.
+- `trafficReportMinutes` (default `10`, at most `60`): how often to log live event traffic (see
+  Traffic); `0` turns the counting off.
 - `webhookUrlFile`: where the webhook URL lives.
 - `mutedFile` (default `~/.local/state/qitt/muted.json`): the muted conversations; must match
   `QITT_MUTED_FILE` for `bin/qitt-mute` if that is set.
@@ -127,7 +130,8 @@ The cursor is the previous poll's start, held back to the oldest message still w
 unflushed batch, and kept in `bridge-search.json`, so after a restart the bridge catches up on
 what it missed while down, including a batch the restart threw away. Without that file it reads
 the last 10 minutes. An `app_rate_limited` envelope or a reconnect triggers a poll right away,
-unless one started in the last 30 seconds. Channel messages reach qitt up to about a minute late.
+unless one started in the last 30 seconds. Messages that live events missed reach qitt up to about a
+minute late.
 
 A query reads newest first, 100 per page, up to 10 pages. Past that, the rest of its window is
 read oldest first (from a date two days before the window), up to 10 more pages. If that does not
@@ -185,8 +189,8 @@ after the last one. A message of mine in one of them (top level or reply; edits,
 other dropped subtypes do not count) becomes the normal event for my message plus
 `"my_reply": true`, logged as `my reply slack:<channel>:<ts>`, and is batched right away like any
 other event. A muted conversation is skipped, and so is a conversation qitt never heard about,
-which is where most of my messages go. Live events bring my DM replies; search brings my thread
-replies (`is:thread with:<@me>`).
+which is where most of my messages go. Live events bring my replies as I post them; search
+(`is:thread with:<@me>`, `is:dm`) catches up the ones they miss.
 
 Slack does not say whether a message was typed or sent from a draft, and agents on other machines
 draft too, so the bridge does not try to match drafts: qitt finds the thread that drafted a reply
@@ -242,6 +246,29 @@ logged as `health <kind>: <text>`:
 
 There is no recovery event. Every kind but `missed_messages` repeats hourly while it lasts, so one
 that has not repeated for more than an hour has cleared; `search_disabled` lasts until restart.
+
+## Traffic
+
+To find what uses up Slack's 30,000 events per workspace per hour, the bridge counts every live
+event by workspace, authorizing user, channel and event type (`lib/traffic.mjs`) and logs, every
+`trafficReportMinutes`:
+
+```
+traffic: 4123 live events in the last 10m (~24738/h); last 60m by workspace: T0123 24310
+traffic types: message 3000, message/message_changed 900, ...
+traffic channels: C0123 (channel) 1200, C0456 (group) 800, ..., 212 other channels 1100
+```
+
+The workspace totals cover the last hour, which is what Slack holds against the cap. Events
+authorized for anyone but me (another user or a bot of the same app) are listed after them as
+`authorized for others`. When Slack starts rate-limiting a workspace (its first `app_rate_limited`
+after 3 minutes without one), the same three lines go out for that workspace's last hour, prefixed
+`traffic at rate limit of <team>`. Lines carry ids only; the report makes no Slack calls.
+
+Each `app_rate_limited` is logged with its workspace and the minute Slack started limiting it, and
+each Socket Mode `hello` as `hello: app <id>, <n> open connections`. Slack spreads events across
+open connections, so more than one means another client holds the same app token and takes a
+share of the events.
 
 ## Body
 
