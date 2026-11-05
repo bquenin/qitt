@@ -2,9 +2,10 @@
 // over that it drops live events, DMs included, and sends app_rate_limited once a minute while
 // search and the reconciler catch up. Every message in every channel I am in counts, so this counts
 // each events_api envelope by workspace, authorizing user, channel and event type, in one-minute
-// buckets kept for an hour, to show which channels use the budget up. It logs the last
-// reportMinutes every reportMinutes, and a workspace's last hour when Slack starts rate-limiting
-// it. Ids only: it makes no Slack calls.
+// buckets kept for an hour, to show which channels use the budget up. Reports cover whole minutes
+// only, the current one waiting for the next report: every reportMinutes it logs the minutes since
+// its last report, and when Slack starts rate-limiting a workspace, that workspace's last hour.
+// Ids only: it makes no Slack calls.
 const minuteMs = 60_000;
 const hourMinutes = 60;
 
@@ -33,13 +34,18 @@ export class Traffic {
     this.me = me;
     this.log = log;
     this.now = now;
-    this.reportMinutes = reportMinutes;
+    this.reportMinutes = reportMinutes; // whole minutes
     this.top = top;
     this.gapMs = gapMs; // a rate-limit streak ends after this long without a notice, as in Health
-    this.started = now();
-    this.buckets = new Map(); // minute -> Map(key -> count)
+    this.first = this.#minute(); // the minute counting started in
+    this.next = this.first; // the first minute the next timed report covers
+    this.buckets = new Map(); // minute -> Map(key -> count), for the current minute and the hour before it
     this.limited = new Map(); // workspace -> ms of its latest app_rate_limited
     this.timer = undefined;
+  }
+
+  #minute() {
+    return Math.floor(this.now() / minuteMs);
   }
 
   // Counts one events_api payload: { team_id, authorizations, event }.
@@ -53,22 +59,21 @@ export class Traffic {
       event.channel_type ? `${channel} (${event.channel_type})` : channel,
       event.subtype ? `${event.type}/${event.subtype}` : (event.type ?? "?"),
     ].join("\t");
-    const minute = Math.floor(this.now() / minuteMs);
+    const minute = this.#minute();
     let bucket = this.buckets.get(minute);
     if (!bucket) {
       bucket = new Map();
       this.buckets.set(minute, bucket);
-      for (const m of this.buckets.keys()) if (m <= minute - hourMinutes) this.buckets.delete(m);
+      for (const m of this.buckets.keys()) if (m < minute - hourMinutes) this.buckets.delete(m);
     }
     bucket.set(key, (bucket.get(key) ?? 0) + 1);
   }
 
-  // Counts per key over the last `minutes` minutes, the current one included, for one workspace or all.
-  #counts(minutes, team) {
-    const from = Math.floor(this.now() / minuteMs) - minutes + 1;
+  // Counts per key in minutes [from, to), for one workspace or all.
+  #counts(from, to, team) {
     const counts = new Map();
     for (const [minute, bucket] of this.buckets) {
-      if (minute < from) continue;
+      if (minute < from || minute >= to) continue;
       for (const [key, n] of bucket) {
         if (team !== undefined && !key.startsWith(`${team}\t`)) continue;
         counts.set(key, (counts.get(key) ?? 0) + n);
@@ -77,28 +82,41 @@ export class Traffic {
     return counts;
   }
 
-  // Logs the last `minutes` (at most an hour) in three lines: the total and each workspace's last
-  // hour (what Slack holds against 30,000), events authorized for anyone but me, then the busiest
-  // event types and channels. tag says why, team limits it to one workspace.
-  report(minutes = this.reportMinutes, { team, tag } = {}) {
+  // Logs the whole minutes from minute `from` on (at most an hour) in three lines: the total and
+  // each workspace's last hour (what Slack holds against 30,000), events authorized for anyone but
+  // me, then the busiest event types and channels. tag says why, team limits it to one workspace.
+  #report(from, { team, tag } = {}) {
     const prefix = tag ? `traffic ${tag}` : "traffic";
-    const uptime = Math.max(1, Math.ceil((this.now() - this.started) / minuteMs));
-    const span = Math.min(minutes, hourMinutes, uptime);
-    const counts = this.#counts(span, team);
-    const total = sum(counts.values());
-    if (!total) {
-      this.log(`${prefix}: no live events in the last ${span}m`);
+    const to = this.#minute();
+    const hourFrom = Math.max(to - hourMinutes, this.first);
+    const span = to - Math.max(from, hourFrom);
+    if (span < 1) {
+      this.log(`${prefix}: no whole minute to report yet`);
       return;
     }
-    const hour = group(this.#counts(Math.min(hourMinutes, uptime), team), ([t]) => t);
+    const counts = this.#counts(to - span, to, team);
+    const total = sum(counts.values());
+    const hour = group(this.#counts(hourFrom, to, team), ([t]) => t);
+    const hourText = hour.length ? `; last ${to - hourFrom}m by workspace: ${list(hour)}` : "";
+    if (!total) {
+      // Slack can drop every event for a while when it rate-limits; the last hour still counts.
+      this.log(`${prefix}: no live events in the last ${span}m${hourText}`);
+      return;
+    }
     const others = group(counts, ([, auth]) => auth).filter(([auth]) => auth !== this.me && auth !== "?");
     this.log(
-      `${prefix}: ${total} live events in the last ${span}m (~${Math.round((total * hourMinutes) / span)}/h); ` +
-        `last ${Math.min(hourMinutes, uptime)}m by workspace: ${list(hour)}` +
+      `${prefix}: ${total} live events in the last ${span}m (~${Math.round((total * hourMinutes) / span)}/h)${hourText}` +
         (others.length ? `; authorized for others: ${list(others, 5)}` : ""),
     );
     this.log(`${prefix} types: ${list(group(counts, ([, , , type]) => type), 10, "other types")}`);
     this.log(`${prefix} channels: ${list(group(counts, ([, , channel]) => channel), this.top, "other channels")}`);
+  }
+
+  // The timed report: the whole minutes since the last one, so each minute is reported once.
+  report() {
+    const from = this.next;
+    this.next = Math.max(this.next, this.#minute());
+    this.#report(from);
   }
 
   // One app_rate_limited notice ({ team }): when it starts a workspace's streak, logs that
@@ -109,7 +127,7 @@ export class Traffic {
     const last = this.limited.get(key);
     this.limited.set(key, now);
     if (last !== undefined && now - last <= this.gapMs) return false;
-    this.report(hourMinutes, { team, tag: `at rate limit of ${key}` });
+    this.#report(this.#minute() - hourMinutes, { team, tag: `at rate limit of ${key}` });
     return true;
   }
 

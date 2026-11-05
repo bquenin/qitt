@@ -42,20 +42,51 @@ describe("Traffic", () => {
     assert.deepEqual(lines, ["traffic: no live events in the last 10m"]);
   });
 
+  it("leaves the current minute to the next report, so each event is reported once", () => {
+    const { traffic, lines, tick } = setup();
+    traffic.count(envelope({ channel: "C000FIRST" }));
+    tick(10.25);
+    traffic.count(envelope({ channel: "C000BEFORE" }));
+    traffic.report();
+    traffic.count(envelope({ channel: "C000AFTER" }));
+    tick(10);
+    traffic.report();
+    assert.deepEqual(lines, [
+      "traffic: 1 live events in the last 10m (~6/h); last 10m by workspace: T000TEAM 1",
+      "traffic types: message 1",
+      "traffic channels: C000FIRST (channel) 1",
+      "traffic: 2 live events in the last 10m (~12/h); last 20m by workspace: T000TEAM 3",
+      "traffic types: message 2",
+      "traffic channels: C000AFTER (channel) 1, C000BEFORE (channel) 1",
+    ]);
+  });
+
+  it("still gives the last hour when the interval was quiet", () => {
+    const { traffic, lines, tick } = setup();
+    traffic.count(envelope());
+    tick(10);
+    traffic.report();
+    tick(10);
+    traffic.report();
+    assert.equal(lines.at(-1), "traffic: no live events in the last 10m; last 20m by workspace: T000TEAM 1");
+  });
+
   it("names events authorized for anyone but me", () => {
-    const { traffic, lines } = setup();
+    const { traffic, lines, tick } = setup();
     traffic.count(envelope());
     traffic.count(envelope({ user: "U000OTHER" }));
     traffic.count(envelope({ user: "U000BOT", bot: true }));
+    tick(1);
     traffic.report();
     assert.match(lines[0], /; authorized for others: U000BOT \(bot\) 1, U000OTHER 1$/);
   });
 
   it("finds the channel of events that keep it elsewhere", () => {
-    const { traffic, lines } = setup();
+    const { traffic, lines, tick } = setup();
     traffic.count(envelope({ type: "reaction_added", channel: undefined, channel_type: undefined, item: { channel: "C000ITEM" } }));
     traffic.count(envelope({ type: "channel_created", channel: { id: "C000NEW" }, channel_type: undefined }));
     traffic.count({ event: { type: "message" } });
+    tick(1);
     traffic.report();
     assert.equal(lines[1], "traffic types: channel_created 1, message 1, reaction_added 1");
     assert.equal(lines[2], "traffic channels: - 2, C000ITEM 1");
@@ -67,7 +98,8 @@ describe("Traffic", () => {
     traffic.count(envelope({ channel: "C000OLD" }));
     tick(61);
     traffic.count(envelope({ channel: "C000NEW" }));
-    traffic.report(60);
+    tick(1);
+    traffic.report();
     assert.equal(traffic.buckets.size, 1);
     assert.equal(lines[0], "traffic: 1 live events in the last 60m (~1/h); last 60m by workspace: T000TEAM 1");
     assert.equal(lines[2], "traffic channels: C000NEW (channel) 1");
@@ -93,6 +125,13 @@ describe("Traffic", () => {
     assert.equal(traffic.rateLimited({ team: "T000TEAM" }), true);
     assert.equal(traffic.rateLimited({}), true);
     assert.match(lines.at(-3), /^traffic at rate limit of \?: 3 live events/);
+  });
+
+  it("has nothing to report before a whole minute has passed", () => {
+    const { traffic, lines } = setup();
+    traffic.count(envelope());
+    assert.equal(traffic.rateLimited({ team: "T000TEAM" }), true);
+    assert.deepEqual(lines, ["traffic at rate limit of T000TEAM: no whole minute to report yet"]);
   });
 
   it("reports on a timer unless turned off", () => {

@@ -52,8 +52,8 @@ Nothing here is committed.
   `0` turns it off, which leaves only live events.
 - `reconcileMinutes` (default `15`): how often the reconciler reads my conversations from Slack and
   backfills what live events and search missed; `0` turns it off.
-- `trafficReportMinutes` (default `10`, at most `60`): how often to log live event traffic (see
-  Traffic); `0` turns the counting off.
+- `trafficReportMinutes` (default `10`, whole minutes, at most `60`): how often to log live event
+  traffic (see Traffic); `0` turns the counting off.
 - `webhookUrlFile`: where the webhook URL lives.
 - `mutedFile` (default `~/.local/state/qitt/muted.json`): the muted conversations; must match
   `QITT_MUTED_FILE` for `bin/qitt-mute` if that is set.
@@ -251,7 +251,8 @@ that has not repeated for more than an hour has cleared; `search_disabled` lasts
 
 To find what uses up Slack's 30,000 events per workspace per hour, the bridge counts every live
 event by workspace, authorizing user, channel and event type (`lib/traffic.mjs`) and logs, every
-`trafficReportMinutes`:
+`trafficReportMinutes`, the whole minutes since its last report (the current minute goes in the
+next one):
 
 ```
 traffic: 4123 live events in the last 10m (~24738/h); last 60m by workspace: T0123 24310
@@ -259,7 +260,8 @@ traffic types: message 3000, message/message_changed 900, ...
 traffic channels: C0123 (channel) 1200, C0456 (group) 800, ..., 212 other channels 1100
 ```
 
-The workspace totals cover the last hour, which is what Slack holds against the cap. Events
+The workspace totals cover the last hour, which is what Slack holds against the cap; they are
+there even when no live events came in during the interval, as when Slack drops them all. Events
 authorized for anyone but me (another user or a bot of the same app) are listed after them as
 `authorized for others`. When Slack starts rate-limiting a workspace (its first `app_rate_limited`
 after 3 minutes without one), the same three lines go out for that workspace's last hour, prefixed
