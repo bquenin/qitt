@@ -52,7 +52,8 @@ Nothing here is committed.
 - `savedPollSeconds` (default `300`): how often to poll saved-for-later items; `0` turns the poller off.
 - `searchPollSeconds` (default `60`): how often to poll search for messages live events missed,
   and for mentions and my threads in public channels, which have no live events; `0` turns it
-  off, which leaves those to the reconciler.
+  off. The reconciler still reads conversations qitt knows and threads I posted in, but a new
+  mention anywhere else in a public channel is then missed.
 - `reconcileMinutes` (default `15`): how often the reconciler reads my conversations from Slack and
   backfills what live events and search missed; `0` turns it off.
 - `trafficReportMinutes` (default `10`, whole minutes, at most `60`): how often to log live event
