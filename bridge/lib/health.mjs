@@ -41,7 +41,7 @@ export class Health {
     if (now - this.streak.start < this.rateLimitMs) return false;
     return this.report(
       "slack_rate_limited",
-      `Slack has been rate-limiting the bridge's live events (app_rate_limited) since ${timeLocal(new Date(this.streak.start))} and drops them meanwhile; search catches up within about a minute. The usual cause is the Slack app subscribing to more than message.im and message.mpim.`,
+      `Slack has been rate-limiting the bridge's live events (app_rate_limited) since ${timeLocal(new Date(this.streak.start))} and drops them meanwhile; search catches up within about a minute. Slack allows 30,000 live events per workspace an hour, counting every message in every channel the app's user is in; the traffic lines in the bridge log show which channels use them up.`,
     );
   }
 }

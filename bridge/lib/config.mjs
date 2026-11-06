@@ -21,6 +21,9 @@ export const parseConfig = (raw) => {
   if (typeof searchPoll !== "number" || !(searchPoll >= 0)) throw new Error("searchPollSeconds must be a number, 0 to disable");
   const reconcile = raw.reconcileMinutes ?? 15;
   if (typeof reconcile !== "number" || !(reconcile >= 0)) throw new Error("reconcileMinutes must be a number, 0 to disable");
+  const traffic = raw.trafficReportMinutes ?? 10;
+  // Whole minutes: reports cover whole one-minute buckets.
+  if (!Number.isInteger(traffic) || traffic < 0 || traffic > 60) throw new Error("trafficReportMinutes must be a whole number of minutes from 0 to 60, 0 to disable");
   if (raw.timezone !== undefined) {
     const bad = new Error("timezone must be an IANA timezone name, e.g. America/New_York");
     if (typeof raw.timezone !== "string") throw bad;
@@ -43,6 +46,7 @@ export const parseConfig = (raw) => {
     savedPollSeconds: savedPoll,
     searchPollSeconds: searchPoll,
     reconcileMinutes: reconcile,
+    trafficReportMinutes: traffic,
     // Times on events and batch windows; defaults to the system timezone and its short name.
     timezone: raw.timezone ?? systemTimezone(),
     timezoneLabel: raw.timezoneLabel ?? null,
