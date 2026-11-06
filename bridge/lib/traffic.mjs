@@ -1,11 +1,12 @@
 // Live event traffic. Slack delivers at most 30,000 events per workspace per app per 60 minutes;
-// over that it drops live events, DMs included, and sends app_rate_limited once a minute while
-// search and the reconciler catch up. Every message in every channel I am in counts, so this counts
-// each events_api envelope by workspace, authorizing user, channel and event type, in one-minute
-// buckets kept for an hour, to show which channels use the budget up. Reports cover whole minutes
-// only, the current one waiting for the next report: every reportMinutes it logs the minutes since
-// its last report, and when Slack starts rate-limiting a workspace, that workspace's last hour.
-// Ids only: it makes no Slack calls.
+// over that it drops the overflow, DMs included, and sends app_rate_limited once a minute while
+// search and the reconciler catch up. Every event the app subscribes to counts (message.channels
+// on a user token also brought public channels I am not in, so the app no longer subscribes to
+// it), so this counts each events_api envelope by workspace, authorizing user, channel and event
+// type, in one-minute buckets kept for an hour, to show which channels use the budget up. Reports
+// cover whole minutes only, the current one waiting for the next report: every reportMinutes it
+// logs the minutes since its last report, and when Slack starts rate-limiting a workspace, that
+// workspace's last hour. Ids only: it makes no Slack calls.
 const minuteMs = 60_000;
 const hourMinutes = 60;
 
