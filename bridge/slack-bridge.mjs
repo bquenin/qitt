@@ -5,9 +5,10 @@
 //   node slack-bridge.mjs             run (bin/qitt-bridge keeps it running detached)
 //   node slack-bridge.mjs --dry-run   print each batch body to stdout instead of POSTing
 //
-// The Slack app subscribes to messages in my DMs, group DMs and channels, so they arrive live.
-// Slack caps live events at 30,000 per workspace per hour and drops the rest; polling search
-// (lib/search.mjs) catches up what the socket missed, and live traffic is counted to find what
+// The Slack app subscribes to messages in my DMs, group DMs and private channels, so they arrive
+// live. Slack caps live events at 30,000 per workspace per hour and drops the rest; polling search
+// (lib/search.mjs) brings in mentions and my threads in public channels, which have no live events,
+// and catches up what the socket missed, and live traffic is counted to find what
 // uses the budget up (lib/traffic.mjs). It also polls my saved-for-later items (lib/saved.mjs)
 // and batches newly saved ones, and sends my own messages in conversations qitt has heard about
 // (lib/conversations.mjs).

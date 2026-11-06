@@ -1,7 +1,9 @@
-// Search intake. Slack caps the Events API at 30,000 events per workspace per app per hour, and
-// the app's message.channels/message.groups subscriptions go over it on weekdays: Slack then sends
-// app_rate_limited and drops live events, DMs included. Polling search.messages (search:read)
-// every searchPollSeconds catches up what the socket missed:
+// Search intake. The app subscribes only to DMs, group DMs and private channels (message.channels
+// on a user token also brought public channels I am not in, over Slack's cap of 30,000 events per
+// workspace per app per hour), so search is how mentions and my threads in public channels arrive.
+// Over the cap Slack sends app_rate_limited and drops the overflow, DMs included. Polling
+// search.messages (search:read) every searchPollSeconds brings those in and catches up what the
+// socket missed:
 //
 //   is:dm                      DMs and group DMs
 //   <@me>, <!subteam^group>    mentions of me and my user groups

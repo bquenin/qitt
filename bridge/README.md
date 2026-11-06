@@ -12,12 +12,14 @@ webhook on localhost. It reads Slack and never writes to it.
   (thread lookups), `users:read`, `search:read` (search intake and saved for later; without it both
   pollers turn themselves off). Optional: `channels:read`, `groups:read` (names of channels in live
   events; search matches carry their own).
-- User event subscriptions: `message.im`, `message.mpim`, `message.channels`, `message.groups`, so
-  channel messages arrive within seconds. Slack caps an app at 30,000 events per workspace per
-  hour, and every message in every channel I am in counts against it. Over the cap Slack sends
-  `app_rate_limited` once a minute and drops live events, DMs included, while search catches up
-  (see Search intake). The `traffic` log lines (see Traffic) show which channels use the cap up;
-  leaving busy channels I do not read is the only way to lower it.
+- User event subscriptions: `message.im`, `message.mpim`, `message.groups`, so DMs, group DMs and
+  private channels arrive within seconds. Not `message.channels`: with a user token Slack also
+  sends it for public channels I am not in, which put the app over Slack's cap of 30,000 events per
+  workspace per hour every weekday (on 11/5, none of the 63 busiest channels in the traffic log
+  were mine). Mentions and replies in my threads in public channels come through search instead
+  (see Search intake), within about `searchPollSeconds`. Over the cap Slack sends
+  `app_rate_limited` once a minute and drops the overflow, DMs included, while search catches up.
+  The `traffic` log lines (see Traffic) show what uses the cap.
 
 ## Local files
 
@@ -48,8 +50,10 @@ Nothing here is committed.
 - `ignoreBots` (default `true`): drop messages with `bot_id` or subtype `bot_message`.
 - `batchWindowSeconds` (default `20`): how long a batch collects after its first event.
 - `savedPollSeconds` (default `300`): how often to poll saved-for-later items; `0` turns the poller off.
-- `searchPollSeconds` (default `60`): how often to poll search for messages live events missed;
-  `0` turns it off, which leaves only live events.
+- `searchPollSeconds` (default `60`): how often to poll search for messages live events missed,
+  and for mentions and my threads in public channels, which have no live events; `0` turns it
+  off. The reconciler still reads conversations qitt knows and threads I posted in, but a new
+  mention anywhere else in a public channel is then missed.
 - `reconcileMinutes` (default `15`): how often the reconciler reads my conversations from Slack and
   backfills what live events and search missed; `0` turns it off.
 - `trafficReportMinutes` (default `10`, whole minutes, at most `60`): how often to log live event
