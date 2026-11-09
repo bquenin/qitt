@@ -68,18 +68,18 @@ out.append(
 out.append(f'<rect x="0" y="0" width="{W}" height="{H}" fill="#ffffff"/>')
 
 text(30, 42, "qitt: a proactive chief of staff inside T3 Code", 24, "bold")
-text(30, 68, "One pinned thread reads what reaches me, decides what each item needs, and hands the research to worker "
-     "threads, so a brief and a proposed reply are", 14, fill=MUTED)
-text(30, 88, "waiting when I look. It never sends anything for me. Every source of requests is a module, and the core "
-     "does not change when one is added.", 14, fill=MUTED)
+text(30, 68, "One pinned thread reads the requests that reach its owner, decides what each one needs, and hands the "
+     "research to worker threads, so a brief and a proposed", 14, fill=MUTED)
+text(30, 88, "reply are ready ahead of time. It never sends anything for its owner. Every source of requests is a "
+     "module, and the core does not change when one is added.", 14, fill=MUTED)
 
 # Sources: one module per place requests come from.
 group(30, 110, 350, 662, "Sources: one module each", GREEN_FILL, GREEN, GREEN_TITLE)
 box(50, 160, 310, 150, "Slack", [
     "slack-bridge holds a Socket Mode",
     "connection for DMs and polls search for",
-    "mentions and my threads. It filters,",
-    "dedupes and batches. It only reads.",
+    "mentions and the owner's threads. It",
+    "filters, dedupes and batches. It only reads.",
 ], GREEN)
 box(50, 330, 310, 112, "JIRA", [
     "An automation rule calls a webhook relay",
@@ -95,7 +95,7 @@ box(50, 630, 310, 132, "Tools for the agents", [
     "MCP servers and skills to read each",
     "source and save drafts. Each module",
     "lists the send tools to deny, so nothing",
-    "goes out in my name.",
+    "goes out in the owner's name.",
 ], GREEN)
 
 # The one piece between outside callers and T3.
@@ -116,11 +116,11 @@ box(670, 160, 480, 118, "Scheduled tasks, bound to the qitt thread", [
     "thread, with the module's intake.md as its prompt. Plus a weekday sweep.",
 ])
 box(670, 328, 480, 200, "qitt: the pinned thread", [
-    "Charter = core rules + one section per installed source + my local",
+    "Charter = core rules + one section per installed source + the local",
     "context, assembled by bin/install-profiles.",
     "",
-    "For each item it decides: nothing needed, remind me, brief me,",
-    "follow up in the thread that owns it, or start a worker.",
+    "For each item it decides: nothing needed, a reminder, a short brief,",
+    "a follow-up in the thread that owns it, or a new worker.",
     "It searches open, settled and peer threads before starting one,",
     "and keeps the board of all work in flight.",
 ], width=3.5, title_fill=BLUE_TITLE)
@@ -130,28 +130,28 @@ box(670, 620, 230, 132, "Worker threads", [
     "a brief and a proposed reply.",
     "Research only.",
 ])
-box(920, 620, 230, 132, "Threads I started", [
-    "Work I began by hand owns its",
-    "follow-ups too. qitt sends them",
-    "there, which wakes the thread.",
+box(920, 620, 230, 132, "Hand-started threads", [
+    "Work the owner began by hand",
+    "owns its follow-ups too. qitt sends",
+    "them there, which wakes the thread.",
 ])
 
 # Outside the server.
 box(1250, 160, 250, 118, "Two rules", [
-    "1. It never sends for me.",
+    "1. It never sends for its owner.",
     "2. T3 constructs only: threads",
     "and scheduled tasks.",
 ], GREY, GREY_FILL)
-box(1250, 328, 250, 200, "Me", [
-    "Ask qitt anything, without giving",
+box(1250, 328, 250, 200, "The owner", [
+    "Asks qitt anything, without giving",
     "context.",
     "",
-    "Read the briefs, edit the drafts",
-    "and send them myself.",
-    "Settle threads when they are done.",
+    "Reads the briefs, edits the drafts",
+    "and sends them.",
+    "Settles threads when they are done.",
 ], GREY)
 box(1250, 620, 250, 132, "Peer T3 servers", [
-    "For example my laptop, for work",
+    "For example a laptop, for work",
     "only that machine can do. qitt",
     "lists, searches and launches",
     "threads there.",

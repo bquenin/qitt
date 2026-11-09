@@ -2,16 +2,16 @@
 <defs><marker id="head" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#27272a"/></marker></defs>
 <rect x="0" y="0" width="1530" height="912" fill="#ffffff"/>
 <text x="30" y="42" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="bold" fill="#27272a" text-anchor="start">qitt: a proactive chief of staff inside T3 Code</text>
-<text x="30" y="68" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#52525b" text-anchor="start">One pinned thread reads what reaches me, decides what each item needs, and hands the research to worker threads, so a brief and a proposed reply are</text>
-<text x="30" y="88" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#52525b" text-anchor="start">waiting when I look. It never sends anything for me. Every source of requests is a module, and the core does not change when one is added.</text>
+<text x="30" y="68" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#52525b" text-anchor="start">One pinned thread reads the requests that reach its owner, decides what each one needs, and hands the research to worker threads, so a brief and a proposed</text>
+<text x="30" y="88" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#52525b" text-anchor="start">reply are ready ahead of time. It never sends anything for its owner. Every source of requests is a module, and the core does not change when one is added.</text>
 <rect x="30" y="110" width="350" height="662" rx="16" fill="#edf7ef" stroke="#2f855a" stroke-width="2"/>
 <text x="48" y="138" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="bold" fill="#22543d" text-anchor="start">Sources: one module each</text>
 <rect x="50" y="160" width="310" height="150" rx="12" fill="#ffffff" stroke="#2f855a" stroke-width="2"/>
 <text x="66" y="186" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#27272a" text-anchor="start">Slack</text>
 <text x="66" y="208" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">slack-bridge holds a Socket Mode</text>
 <text x="66" y="226" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">connection for DMs and polls search for</text>
-<text x="66" y="244" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">mentions and my threads. It filters,</text>
-<text x="66" y="262" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">dedupes and batches. It only reads.</text>
+<text x="66" y="244" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">mentions and the owner's threads. It</text>
+<text x="66" y="262" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">filters, dedupes and batches. It only reads.</text>
 <rect x="50" y="330" width="310" height="112" rx="12" fill="#ffffff" stroke="#2f855a" stroke-width="2"/>
 <text x="66" y="356" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#27272a" text-anchor="start">JIRA</text>
 <text x="66" y="378" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">An automation rule calls a webhook relay</text>
@@ -27,7 +27,7 @@
 <text x="66" y="678" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">MCP servers and skills to read each</text>
 <text x="66" y="696" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">source and save drafts. Each module</text>
 <text x="66" y="714" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">lists the send tools to deny, so nothing</text>
-<text x="66" y="732" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">goes out in my name.</text>
+<text x="66" y="732" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">goes out in the owner's name.</text>
 <rect x="420" y="330" width="180" height="262" rx="12" fill="#f4f4f5" stroke="#71717a" stroke-width="2"/>
 <text x="436" y="356" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#27272a" text-anchor="start">Hook filter</text>
 <text x="436" y="378" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">The only port open to</text>
@@ -45,11 +45,11 @@
 <text x="686" y="226" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">thread, with the module's intake.md as its prompt. Plus a weekday sweep.</text>
 <rect x="670" y="328" width="480" height="200" rx="12" fill="#ffffff" stroke="#2f6db5" stroke-width="3.5"/>
 <text x="686" y="354" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#1e4f8a" text-anchor="start">qitt: the pinned thread</text>
-<text x="686" y="376" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">Charter = core rules + one section per installed source + my local</text>
+<text x="686" y="376" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">Charter = core rules + one section per installed source + the local</text>
 <text x="686" y="394" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">context, assembled by bin/install-profiles.</text>
 <text x="686" y="412" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start"></text>
-<text x="686" y="430" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">For each item it decides: nothing needed, remind me, brief me,</text>
-<text x="686" y="448" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">follow up in the thread that owns it, or start a worker.</text>
+<text x="686" y="430" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">For each item it decides: nothing needed, a reminder, a short brief,</text>
+<text x="686" y="448" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">a follow-up in the thread that owns it, or a new worker.</text>
 <text x="686" y="466" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">It searches open, settled and peer threads before starting one,</text>
 <text x="686" y="484" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">and keeps the board of all work in flight.</text>
 <rect x="670" y="620" width="230" height="132" rx="12" fill="#ffffff" stroke="#2f6db5" stroke-width="2"/>
@@ -59,26 +59,26 @@
 <text x="686" y="704" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">a brief and a proposed reply.</text>
 <text x="686" y="722" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">Research only.</text>
 <rect x="920" y="620" width="230" height="132" rx="12" fill="#ffffff" stroke="#2f6db5" stroke-width="2"/>
-<text x="936" y="646" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#27272a" text-anchor="start">Threads I started</text>
-<text x="936" y="668" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">Work I began by hand owns its</text>
-<text x="936" y="686" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">follow-ups too. qitt sends them</text>
-<text x="936" y="704" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">there, which wakes the thread.</text>
+<text x="936" y="646" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#27272a" text-anchor="start">Hand-started threads</text>
+<text x="936" y="668" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">Work the owner began by hand</text>
+<text x="936" y="686" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">owns its follow-ups too. qitt sends</text>
+<text x="936" y="704" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">them there, which wakes the thread.</text>
 <rect x="1250" y="160" width="250" height="118" rx="12" fill="#f4f4f5" stroke="#71717a" stroke-width="2"/>
 <text x="1266" y="186" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#27272a" text-anchor="start">Two rules</text>
-<text x="1266" y="208" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">1. It never sends for me.</text>
+<text x="1266" y="208" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">1. It never sends for its owner.</text>
 <text x="1266" y="226" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">2. T3 constructs only: threads</text>
 <text x="1266" y="244" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">and scheduled tasks.</text>
 <rect x="1250" y="328" width="250" height="200" rx="12" fill="#ffffff" stroke="#71717a" stroke-width="2"/>
-<text x="1266" y="354" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#27272a" text-anchor="start">Me</text>
-<text x="1266" y="376" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">Ask qitt anything, without giving</text>
+<text x="1266" y="354" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#27272a" text-anchor="start">The owner</text>
+<text x="1266" y="376" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">Asks qitt anything, without giving</text>
 <text x="1266" y="394" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">context.</text>
 <text x="1266" y="412" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start"></text>
-<text x="1266" y="430" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">Read the briefs, edit the drafts</text>
-<text x="1266" y="448" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">and send them myself.</text>
-<text x="1266" y="466" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">Settle threads when they are done.</text>
+<text x="1266" y="430" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">Reads the briefs, edits the drafts</text>
+<text x="1266" y="448" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">and sends them.</text>
+<text x="1266" y="466" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">Settles threads when they are done.</text>
 <rect x="1250" y="620" width="250" height="132" rx="12" fill="#ffffff" stroke="#71717a" stroke-width="2"/>
 <text x="1266" y="646" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#27272a" text-anchor="start">Peer T3 servers</text>
-<text x="1266" y="668" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">For example my laptop, for work</text>
+<text x="1266" y="668" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">For example a laptop, for work</text>
 <text x="1266" y="686" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">only that machine can do. qitt</text>
 <text x="1266" y="704" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">lists, searches and launches</text>
 <text x="1266" y="722" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">threads there.</text>
