@@ -1,0 +1,4 @@
+# Tools that send or post in this source, one per line. bin/install-profiles denies them in the
+# qitt and worker profiles. A name that matches no real tool denies nothing, so check each one
+# against the tools your agents actually have.
+# mcp__<server>__<send tool>

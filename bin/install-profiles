@@ -1,7 +1,14 @@
 #!/usr/bin/env bash
-# Install the qitt and worker T3 project roots from profiles/ into ~/.local/state/qitt/projects/
-# (QITT_PROJECTS_DIR overrides). Copies, so editing the repo does not change new threads until you
-# reinstall.
+# Install the qitt and worker T3 project roots into ~/.local/state/qitt/projects/
+# (QITT_PROJECTS_DIR overrides), assembled from profiles/ and the enabled sources. Copies, so
+# editing the repo does not change new threads until you reinstall.
+#
+# A source is a folder: sources/<name>/ in this repo, or ~/.config/qitt/sources/<name>/, which wins
+# over a repo source of the same name. Its qitt.md and worker.md replace the
+# "<!-- qitt:sources -->" line of the matching charter, its deny.txt adds to both profiles' deny
+# lists, and its skills/ are installed next to the shared ones. The enabled sources come from
+# QITT_SOURCES (names separated by spaces or commas), else ~/.config/qitt/sources.txt (one name
+# per line, # for comments), else slack and jira. See docs/sources.md.
 #
 # Each charter imports the owner's local context as @context.local.md, a copy of
 # ~/.config/qitt/context.md (QITT_CONTEXT overrides) placed in the profile. Claude Code expands
@@ -9,12 +16,13 @@
 # this is a copy, not a link: re-run this script after editing context.md. Without a context file
 # the import line is left out and the charters' fallback applies.
 #
-# The profiles deny the Slack MCP server's send tools by name (mcp__<server>__...). Set
+# The Slack source denies the Slack MCP server's send tools by name (mcp__<server>__...). Set
 # QITT_SLACK_MCP_SERVER if your Slack MCP server is not named slack-cli.
 set -euo pipefail
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
 dest=${QITT_PROJECTS_DIR:-$HOME/.local/state/qitt/projects}
+own_sources=$HOME/.config/qitt/sources
 slack_mcp=${QITT_SLACK_MCP_SERVER:-slack-cli}
 context=${QITT_CONTEXT:-$HOME/.config/qitt/context.md}
 if [[ -n ${QITT_CONTEXT:-} && ! -f $QITT_CONTEXT ]]; then
@@ -26,31 +34,108 @@ if [[ ! $slack_mcp =~ ^[A-Za-z0-9_-]+$ ]]; then
   exit 1
 fi
 
+if [[ -n ${QITT_SOURCES+set} ]]; then
+  enabled=$QITT_SOURCES
+elif [[ -f $HOME/.config/qitt/sources.txt ]]; then
+  enabled=$(sed 's/#.*//' "$HOME/.config/qitt/sources.txt")
+else
+  enabled="slack jira"
+fi
+read -r -a wanted <<<"$(tr '\n,' '  ' <<<"$enabled")"
+
+names=()
+dirs=()
+for name in ${wanted[@]+"${wanted[@]}"}; do
+  if [[ ! $name =~ ^[a-z0-9][a-z0-9-]*$ ]]; then
+    echo "source name '$name' must be lowercase letters, digits and -" >&2
+    exit 1
+  fi
+  case " ${names[*]-} " in *" $name "*) continue ;; esac
+  if [[ -d $own_sources/$name ]]; then
+    dir=$own_sources/$name
+  elif [[ -d $repo/sources/$name ]]; then
+    dir=$repo/sources/$name
+  else
+    echo "source '$name' is in neither $own_sources nor $repo/sources" >&2
+    exit 1
+  fi
+  if [[ ! -f $dir/qitt.md ]]; then
+    echo "source '$name' has no qitt.md in $dir" >&2
+    exit 1
+  fi
+  names+=("$name")
+  dirs+=("$dir")
+done
+
+sections=$(mktemp)
+trap 'rm -f "$sections"' EXIT
+
 for profile in qitt worker; do
   src=$repo/profiles/$profile
   dst=$dest/$profile
   mkdir -p "$dst/.claude"
+
+  # This profile's section from each enabled source, one blank line apart.
+  : >|"$sections"
+  deny=()
+  for dir in ${dirs[@]+"${dirs[@]}"}; do
+    if [[ -f $dir/$profile.md ]]; then
+      if [[ -s $sections ]]; then echo >>"$sections"; fi
+      cat "$dir/$profile.md" >>"$sections"
+    fi
+    if [[ -f $dir/deny.txt ]]; then deny+=("$dir/deny.txt"); fi
+  done
+  if [[ ! -s $sections ]]; then echo "No source is installed." >>"$sections"; fi
+
+  if ! awk -v sections="$sections" '
+    $0 == "<!-- qitt:sources -->" { while ((getline line < sections) > 0) print line; found = 1; next }
+    { print }
+    END { exit !found }' "$src/CLAUDE.md" >|"$dst/CLAUDE.md.tmp"; then
+    echo "$src/CLAUDE.md has no <!-- qitt:sources --> line" >&2
+    exit 1
+  fi
   if [[ -f $context ]]; then
     install -m 0600 "$context" "$dst/context.local.md"
-    install -m 0644 "$src/CLAUDE.md" "$dst/CLAUDE.md"
   else
     rm -f "$dst/context.local.md"
-    grep -vx '@context.local.md' "$src/CLAUDE.md" >|"$dst/CLAUDE.md.tmp"
-    chmod 0644 "$dst/CLAUDE.md.tmp"
-    mv -f "$dst/CLAUDE.md.tmp" "$dst/CLAUDE.md"
+    grep -vx '@context.local.md' "$dst/CLAUDE.md.tmp" >|"$dst/CLAUDE.md.tmp2"
+    mv -f "$dst/CLAUDE.md.tmp2" "$dst/CLAUDE.md.tmp"
   fi
-  sed "s/mcp__slack-cli__/mcp__${slack_mcp}__/g" "$src/.claude/settings.json" >|"$dst/.claude/settings.json.tmp"
+  chmod 0644 "$dst/CLAUDE.md.tmp"
+  mv -f "$dst/CLAUDE.md.tmp" "$dst/CLAUDE.md"
+
+  # The profile's own settings, plus every tool the enabled sources deny.
+  node -e '
+    const { readFileSync } = require("node:fs");
+    const [base, ...lists] = process.argv.slice(1);
+    const settings = JSON.parse(readFileSync(base, "utf8"));
+    const deny = new Set(settings.permissions?.deny ?? []);
+    for (const list of lists) {
+      for (const line of readFileSync(list, "utf8").split("\n")) {
+        const tool = line.trim();
+        if (tool && !tool.startsWith("#")) deny.add(tool);
+      }
+    }
+    settings.permissions = { ...settings.permissions, deny: [...deny] };
+    console.log(JSON.stringify(settings, null, 2));
+  ' "$src/.claude/settings.json" ${deny[@]+"${deny[@]}"} |
+    sed "s/mcp__slack-cli__/mcp__${slack_mcp}__/g" >|"$dst/.claude/settings.json.tmp"
   chmod 0644 "$dst/.claude/settings.json.tmp"
   mv -f "$dst/.claude/settings.json.tmp" "$dst/.claude/settings.json"
-  # Shared skills (skills/<name>/) go into every profile; replace so removed skills disappear.
+
+  # Shared skills (skills/<name>/) and each source's own go into every profile; replace so
+  # removed skills disappear.
   rm -rf "$dst/.claude/skills"
-  if [[ -d $repo/skills ]]; then
-    mkdir -p "$dst/.claude/skills"
-    cp -R "$repo/skills/." "$dst/.claude/skills/"
-  fi
+  for skills in "$repo/skills" ${dirs[@]+"${dirs[@]/%//skills}"}; do
+    if [[ -d $skills ]]; then
+      mkdir -p "$dst/.claude/skills"
+      cp -R "$skills/." "$dst/.claude/skills/"
+    fi
+  done
   echo "installed $dst"
 done
 
+echo "sources: ${names[*]-none}"
 if [[ -f $context ]]; then
   echo "local context copied from $context; re-run after editing it"
 else
