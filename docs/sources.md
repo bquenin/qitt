@@ -1,6 +1,6 @@
 # Sources
 
-A source is a place requests reach me. Slack and JIRA ship in this repo, and you can add your
+A source is a place requests come from. Slack and JIRA ship in this repo, and you can add your
 own: Teams, email, GitHub, a pager. Each source is one folder. qitt's core rules (triage, routing,
 workers, the board) are the same whatever an event came from, so adding a source never touches
 them. [architecture.md](architecture.md) shows where sources sit in the whole.
@@ -12,7 +12,7 @@ them. [architecture.md](architecture.md) shows where sources sit in the whole.
 | `qitt.md` | Always | qitt's charter section: what an event looks like, the `source` and `source-key` of an item, and the rules that apply only to this source. |
 | `worker.md` | If workers need something specific | The workers' charter section: how to read an item in full, how a reply goes out, how to name places. |
 | `intake.md` | If events come by webhook | The prompt of the webhook task that delivers this source's events to the qitt thread. |
-| `deny.txt` | If the agents have a tool that sends there | Tool names to deny in both profiles, one per line, `#` for comments. This is what keeps "it never sends anything for me" true for the source. |
+| `deny.txt` | If the agents have a tool that sends there | Tool names to deny in both profiles, one per line, `#` for comments. This is what keeps "it never sends anything for its owner" true for the source. |
 | `skills/` | Optional | Skills installed into both profiles, next to the shared ones in `skills/`. Each skill needs a name no other enabled source and no shared skill uses: the installer stops on a clash. |
 | Anything else | Optional | A bridge, the prompt of a scheduled sweep, a README. The installer ignores them. |
 
@@ -58,8 +58,9 @@ JSON: it costs far fewer tokens, and T3 frames the value as untrusted data once.
 
 ## Writing `qitt.md`
 
-Write it in my voice ("I", "me"), like the rest of the charter. Start at `### <Name>` and use
-`####` for sections below it. It must say:
+Write it in the owner's voice ("I", "me"), like the rest of the charter: a charter is the owner's
+instructions to the agent. Start at `### <Name>` and use `####` for sections below it. It must
+say:
 
 - **What one event looks like** as the prompt renders it, and what each flag means.
 - **The header fields** of an item from this source:
@@ -67,8 +68,8 @@ Write it in my voice ("I", "me"), like the rest of the charter. Start at `### <N
   - `source-key`: `<name>:<stable id of the conversation or item>`. Routing and search rely on
     this key being the same every time the same conversation comes back.
 - **What counts as an ask there:** the triage guidelines only this source needs.
-- **Anything it sends that is not an item to triage:** health notices, my own replies, the result
-  of a scheduled sweep. Say what to do with each.
+- **Anything it sends that is not an item to triage:** health notices, the owner's own replies,
+  the result of a scheduled sweep. Say what to do with each.
 
 The core charter already covers the five triage decisions, routing, the worker header, peer
 environments, the board and the reply format. Don't repeat them.
@@ -80,7 +81,7 @@ Three things, each in a line or two:
 - **Read:** what "the source in full" means here, and the tool or skill to read it with.
 - **Reply:** how a proposed reply goes out. As a draft saved in the source if it has drafts,
   otherwise as text in the brief. Never sent.
-- **Names:** how to name this source's places and link to them, the way I see them.
+- **Names:** how to name this source's places and link to them, the way the owner sees them.
 
 ## Example: adding Microsoft Teams
 

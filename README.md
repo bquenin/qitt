@@ -1,14 +1,14 @@
 # qitt
 
 A proactive chief of staff that lives inside [T3 Code](https://github.com/pingdotgg/t3code). One
-pinned T3 thread watches the requests that reach me (through Slack and JIRA here, or any source
-you add), starts T3 worker threads that research each one before I get to it, and keeps a live
-picture of all active work so I can ask it anything without giving context. It never replies on my
-behalf: every output is proposed text that I review.
+pinned T3 thread watches the requests that reach its owner (through Slack and JIRA here, or any
+source you add), starts T3 worker threads that research each one ahead of time, and keeps a live
+picture of all active work, so it can be asked anything without context. It never replies on the
+owner's behalf: every output is proposed text for the owner to review.
 
 ## How it works
 
-![qitt architecture: sources (Slack, JIRA, or your own) deliver events to webhook tasks bound to the pinned qitt thread in T3 Code, through a bridge on localhost or through the hook filter. qitt triages each item, sends follow-ups to the thread that owns the work or launches a worker thread, and workers report back ready or blocked. Send tools are denied, so I review and send every reply myself.](docs/images/architecture.png)
+![qitt architecture: sources (Slack, JIRA, or your own) deliver events to webhook tasks bound to the pinned qitt thread in T3 Code, through a bridge on localhost or through the hook filter. qitt triages each item, sends follow-ups to the thread that owns the work or launches a worker thread, and workers report back ready or blocked. Send tools are denied, so the owner reviews and sends every reply.](docs/images/architecture.png)
 
 - **T3 constructs only.** qitt is a thread; intake and the ticket sweep are scheduled tasks bound to
   it. Code outside T3 exists only where something must hold a connection.

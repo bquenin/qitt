@@ -1,12 +1,12 @@
 # Slack source
 
-Slack messages that are asks for me: DMs and group DMs, mentions of me or my user groups, replies
-in threads I am part of, messages I save for later, and every message in the channels I choose to
-watch.
+Slack messages that are asks for the owner: DMs and group DMs, mentions of the owner or the
+owner's user groups, replies in threads the owner is part of, messages saved for later, and every
+message in the watched channels.
 
 | File | What |
 | --- | --- |
-| `qitt.md` | qitt's charter section: Slack triage, saved for later, my own replies, bridge health, muting, how to name Slack places. |
+| `qitt.md` | qitt's charter section: Slack triage, saved for later, the owner's own replies, bridge health, muting, how to name Slack places. |
 | `worker.md` | The workers' section: read the whole thread, reply only as a draft. |
 | `intake.md` | Prompt of the Slack webhook task. It reads the batch's `digest`. |
 | `deny.txt` | The Slack MCP server's send and schedule tools. |

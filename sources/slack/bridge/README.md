@@ -1,9 +1,10 @@
 # slack-bridge
 
 The only long-running qitt process. It holds a Slack Socket Mode connection for a user-scoped
-Slack app (messages in my DMs, group DMs and channels), polls Slack search for what the socket
-misses, keeps the messages qitt should see, and POSTs them in batches to the qitt thread's T3
-webhook on localhost. It reads Slack and never writes to it.
+Slack app (messages in the owner's DMs, group DMs and channels), polls Slack search for what the
+socket misses, keeps the messages qitt should see, and POSTs them in batches to the qitt thread's
+T3 webhook on localhost. It reads Slack and never writes to it. The owner is the Slack user whose
+token the bridge runs with.
 
 ## Slack app
 
@@ -14,12 +15,13 @@ webhook on localhost. It reads Slack and never writes to it.
   events; search matches carry their own).
 - User event subscriptions: `message.im`, `message.mpim`, `message.groups`, so DMs, group DMs and
   private channels arrive within seconds. Not `message.channels`: with a user token Slack also
-  sends it for public channels I am not in, which put the app over Slack's cap of 30,000 events per
-  workspace per hour every weekday (on 11/5, none of the 63 busiest channels in the traffic log
-  were mine). Mentions and replies in my threads in public channels come through search instead
-  (see Search intake), within about `searchPollSeconds`. Over the cap Slack sends
-  `app_rate_limited` once a minute and drops the overflow, DMs included, while search catches up.
-  The `traffic` log lines (see Traffic) show what uses the cap.
+  sends it for public channels the owner is not in, which can put the app over Slack's cap of
+  30,000 events per workspace per hour (in the workspace this was built for, it did every weekday,
+  and none of the 63 busiest channels in the traffic log were the owner's). Mentions and replies
+  in the owner's threads in public channels come through search instead (see Search intake),
+  within about `searchPollSeconds`. Over the cap Slack sends `app_rate_limited` once a minute and
+  drops the overflow, DMs included, while search catches up. The `traffic` log lines (see Traffic)
+  show what uses the cap.
 
 ## Local files
 
@@ -34,28 +36,30 @@ Nothing here is committed.
 | `~/.local/state/qitt/bridge-saved.json` | Saved items already seen (`channel:ts`), so a restart does not re-send. `--dry-run` uses `bridge-saved.dry-run.json`. |
 | `~/.local/state/qitt/bridge-search.json` | Search cursor (where the next poll reads back from) and paging backlog, so a restart catches up from there. `--dry-run` uses `bridge-search.dry-run.json`. |
 | `~/.local/state/qitt/bridge-delivered.json` | Message ids in batches already flushed (last 3 days), so neither a restart nor a catch-up re-sends them. `--dry-run` uses `bridge-delivered.dry-run.json`. |
-| `~/.local/state/qitt/bridge-conversations.json` | Conversations qitt has heard about (last 14 days), so my replies there reach it (see My replies). `--dry-run` uses `bridge-conversations.dry-run.json`. |
-| `~/.local/state/qitt/bridge-reconcile.json` | Reconciler window (where the next run reads from) and the conversations I posted in over the last 7 days (see Reconciler). `--dry-run` uses `bridge-reconcile.dry-run.json`. |
+| `~/.local/state/qitt/bridge-conversations.json` | Conversations qitt has heard about (last 14 days), so the owner's replies there reach it (see The owner's replies). `--dry-run` uses `bridge-conversations.dry-run.json`. |
+| `~/.local/state/qitt/bridge-reconcile.json` | Reconciler window (where the next run reads from) and the conversations the owner posted in over the last 7 days (see Reconciler). `--dry-run` uses `bridge-reconcile.dry-run.json`. |
 | `~/.local/state/qitt/muted.json` | Muted conversations, edited by `bin/qitt-mute`. The bridge only reads it. |
 | `~/.local/state/qitt/logs/slack-bridge.log` | One line per batch and per error. Tokens and URLs are redacted. |
 
 `bridge.json` fields:
 
-- `me`: my Slack user id. My own messages are dropped unless they answer a conversation qitt has
-  heard about (see My replies), but they teach the bridge which threads I am in.
-- `groups`: user group ids whose mentions count as mentions of me.
+- `me`: the owner's Slack user id. The owner's own messages are dropped unless they answer a
+  conversation qitt has heard about (see The owner's replies), but they teach the bridge which
+  threads the owner is in.
+- `groups`: user group ids whose mentions count as mentions of the owner.
 - `watchChannels`: channel ids where every message is kept.
 - `supportChannels`: channel ids where someone else answers (for example a support rotation). Only
-  messages that mention me and replies in my threads are kept there; see What gets through.
+  messages that mention the owner and replies in the owner's threads are kept there; see What
+  gets through.
 - `ignoreBots` (default `true`): drop messages with `bot_id` or subtype `bot_message`.
 - `batchWindowSeconds` (default `20`): how long a batch collects after its first event.
 - `savedPollSeconds` (default `300`): how often to poll saved-for-later items; `0` turns the poller off.
 - `searchPollSeconds` (default `60`): how often to poll search for messages live events missed,
-  and for mentions and my threads in public channels, which have no live events; `0` turns it
-  off. The reconciler still reads conversations qitt knows and threads I posted in, but a new
-  mention anywhere else in a public channel is then missed.
-- `reconcileMinutes` (default `15`): how often the reconciler reads my conversations from Slack and
-  backfills what live events and search missed; `0` turns it off.
+  and for mentions and the owner's threads in public channels, which have no live events; `0`
+  turns it off. The reconciler still reads conversations qitt knows and threads the owner posted
+  in, but a new mention anywhere else in a public channel is then missed.
+- `reconcileMinutes` (default `15`): how often the reconciler reads the owner's conversations from
+  Slack and backfills what live events and search missed; `0` turns it off.
 - `trafficReportMinutes` (default `10`, whole minutes, at most `60`): how often to log live event
   traffic (see Traffic); `0` turns the counting off.
 - `webhookUrlFile`: where the webhook URL lives.
@@ -69,25 +73,28 @@ Nothing here is committed.
 
 ## What gets through
 
-Dropped: my messages (except my replies), bot messages, edits, deletes, joins and every other subtype except
-`thread_broadcast` and `file_share`, and empty messages without files.
+Dropped: the owner's own messages (except replies qitt should hear about, see The owner's
+replies), bot messages, edits, deletes, joins and every other subtype except `thread_broadcast`
+and `file_share`, and empty messages without files.
 
-Kept: DMs and group DMs; channel messages that mention me (`<@me>`) or one of my groups
-(`<!subteam^id>`); replies in threads I have posted in; anything in a watched channel. Thread
-participation is learned from my own messages as they arrive (live or from search); for an unknown
-thread the bridge asks `conversations.replies` once and caches the answer until it restarts.
+Kept: DMs and group DMs; channel messages that mention the owner (`<@me>`) or one of the owner's
+groups (`<!subteam^id>`); replies in threads the owner has posted in; anything in a watched
+channel. Thread participation is learned from the owner's own messages as they arrive (live or
+from search); for an unknown thread the bridge asks `conversations.replies` once and caches the
+answer until it restarts.
 
-In a support channel only messages that mention me (`<@me>`) and replies in threads I have posted
-in are kept, flagged `support_channel`, so qitt knows someone else usually answers there. Group
-mentions and everything else are dropped, even if the channel is also in `watchChannels`; a
-dropped group mention is logged as `dropped slack:<channel>:<ts>: support channel (mentions group)`.
-Replies in my threads get through because they are often addressed to me; when a support thread
-stops needing me, qitt mutes it.
+In a support channel only messages that mention the owner (`<@me>`) and replies in threads the
+owner has posted in are kept, flagged `support_channel`, so qitt knows someone else usually
+answers there. Group mentions and everything else are dropped, even if the channel is also in
+`watchChannels`; a dropped group mention is logged as
+`dropped slack:<channel>:<ts>: support channel (mentions group)`. Replies in the owner's threads
+get through because they are often addressed to the owner; when a support thread stops needing
+the owner, qitt mutes it.
 Saved-for-later items are not filtered, so saving a support-channel message still sends it.
 
 ### Muted conversations
 
-When I tell qitt to stop following a conversation, it runs `bin/qitt-mute`:
+When the owner tells qitt to stop following a conversation, it runs `bin/qitt-mute`:
 
 ```
 bin/qitt-mute <source key | permalink> [note...]   # mute a thread (slack:<channel>:<thread ts>) or a channel or DM (slack:<channel>)
@@ -96,14 +103,14 @@ bin/qitt-mute --list
 ```
 
 A permalink to a reply mutes its thread. A message that would be kept is dropped when its thread
-or its channel is muted, unless it mentions me (`<@me>`); a group mention does not get through.
-Each drop is logged as `dropped slack:<channel>:<ts>: muted <key> (<reason it would have been kept>)`.
-A direct mention gets through even in a muted DM or watched channel, and saved items skip these
-filters; my replies in a muted conversation are dropped. `qitt-mute` holds a lock (`muted.json.lock`) for
-the whole read-change-write, so overlapping commands never lose a change. The bridge re-reads
-`muted.json` when it changes, so a mute applies without a restart. A file that is not
-`{"muted": {...}}` (an empty list is `{"muted": {}}`) is unreadable: the bridge keeps the last list
-it read and logs each distinct error once, and `qitt-mute` refuses to edit it.
+or its channel is muted, unless it mentions the owner (`<@me>`); a group mention does not get
+through. Each drop is logged as `dropped slack:<channel>:<ts>: muted <key> (<reason it would have
+been kept>)`. A direct mention gets through even in a muted DM or watched channel, and saved items
+skip these filters; the owner's replies in a muted conversation are dropped. `qitt-mute` holds a
+lock (`muted.json.lock`) for the whole read-change-write, so overlapping commands never lose a
+change. The bridge re-reads `muted.json` when it changes, so a mute applies without a restart. A
+file that is not `{"muted": {...}}` (an empty list is `{"muted": {}}`) is unreadable: the bridge
+keeps the last list it read and logs each distinct error once, and `qitt-mute` refuses to edit it.
 
 Events are deduped by Slack `event_id` (last 5000) and by message id: an id is held in memory
 from the moment it is batched and written to `bridge-delivered.json` when its batch is flushed.
@@ -120,7 +127,7 @@ newest first, and feeds each match through the same filters, dedupe, and batches
 | --- | --- |
 | `is:dm` | DMs and group DMs the socket missed (rate limit, reconnect, bridge down) |
 | `<@me>`, `<!subteam^group>` per group | mentions |
-| `is:thread with:<@me>` | replies in my threads, and my own replies, which mark threads as mine |
+| `is:thread with:<@me>` | replies in the owner's threads, and the owner's own replies, which mark threads as the owner's |
 | `in:<#channel>` per watched channel | watched channels |
 
 Search is fuzzy (a mention query also matches names), so the filters decide. Matches carry no
@@ -147,10 +154,10 @@ A failed poll is logged and retried next time from the same place. `missing_scop
 
 ## Saved for later
 
-Saving a message for later is how I flag that it matters, so the bridge polls my saved items
-every `savedPollSeconds` with the user token and batches what changed. It lists them by searching
-`is:saved` with `search.messages` (`search:read`, newest first, 100 per page, up to 20 pages).
-Every poll reads the whole list, since removals are found by what is missing from it.
+Saving a message for later is how the owner flags that it matters, so the bridge polls the owner's
+saved items every `savedPollSeconds` with the user token and batches what changed. It lists them
+by searching `is:saved` with `search.messages` (`search:read`, newest first, 100 per page, up to
+20 pages). Every poll reads the whole list, since removals are found by what is missing from it.
 
 Search pages drift: a poll can return one message twice and drop another while the total stays
 the same (seen near the end of a ~900-item list). The bridge dedupes the list, and treats
@@ -183,61 +190,62 @@ If search fails with `missing_scope` or `not_allowed_token_type`, the bridge log
 `saved-for-later polling disabled: ... the user token needs search:read` once and stops polling
 until it restarts. Other errors are logged and retried on the next poll.
 
-## My replies
+## The owner's replies
 
-I often answer a Slack thread myself, or send a draft an agent wrote, while a thread here is still
-working on it, so qitt needs to hear that I replied. The bridge remembers the conversation of every
-message from someone else it batches for qitt, saved items included (a Slack thread by its source
-key; a DM or group DM as a whole, `slack:<channel>`), in `bridge-conversations.json` for 14 days
-after the last one. A message of mine in one of them (top level or reply; edits, deletes and the
-other dropped subtypes do not count) becomes the normal event for my message plus
-`"my_reply": true`, logged as `my reply slack:<channel>:<ts>`, and is batched right away like any
-other event. A muted conversation is skipped, and so is a conversation qitt never heard about,
-which is where most of my messages go. Live events bring my replies as I post them; search
-(`is:thread with:<@me>`, `is:dm`) catches up the ones they miss.
+The owner often answers a Slack thread directly, or sends a draft an agent wrote, while a thread
+here is still working on it, so qitt needs to hear about the reply. The bridge remembers the
+conversation of every message from someone else it batches for qitt, saved items included (a
+Slack thread by its source key; a DM or group DM as a whole, `slack:<channel>`), in
+`bridge-conversations.json` for 14 days after the last one. A message of the owner's in one of
+them (top level or reply; edits, deletes and the other dropped subtypes do not count) becomes the
+normal event for that message plus `"my_reply": true`, logged as `my reply slack:<channel>:<ts>`,
+and is batched right away like any other event. A muted conversation is skipped, and so is a
+conversation qitt never heard about, which is where most of the owner's messages go. Live events
+bring the replies as they are posted; search (`is:thread with:<@me>`, `is:dm`) catches up the ones
+they miss.
 
 Slack does not say whether a message was typed or sent from a draft, and agents on other machines
 draft too, so the bridge does not try to match drafts: qitt finds the thread that drafted a reply
-by its text (see the qitt charter). Matching my messages against a drafts file written by a hook
-on this machine, and holding my replies until the next batch, was tried first: it called an
-unrelated post a sent draft, missed drafts made on other machines, and held a reply for hours on a
-quiet afternoon.
+by its text (see the qitt charter). Matching the owner's messages against a drafts file written by
+a hook on this machine, and holding the replies until the next batch, was tried first: it called
+an unrelated post a sent draft, missed drafts made on other machines, and held a reply for hours
+on a quiet afternoon.
 
 ## Reconciler
 
 Live events and search can both miss a message: Slack drops live events while it rate-limits the
 app, search indexes with a lag and reads back only 10 minutes, and a thread lookup can fail for
 longer than a match stays in search's window. Every `reconcileMinutes` the reconciler reads, with
-the user token, the conversations most likely to hold a message for me:
+the user token, the conversations most likely to hold a message for the owner:
 
 - conversations qitt has heard about (`bridge-conversations.json`, last 14 days): a thread with
   `conversations.replies`, a DM or group DM with `conversations.history` (top level only);
-- conversations I posted in during the last 7 days, found with search `from:<@me>`: the thread of
-  each channel reply or post of mine, and each DM or group DM. They are kept in
-  `bridge-reconcile.json`, so each run searches only my messages since the previous one.
+- conversations the owner posted in during the last 7 days, found with search `from:<@me>`: the
+  thread of each channel reply or post of the owner's, and each DM or group DM. They are kept in
+  `bridge-reconcile.json`, so each run searches only the owner's messages since the previous one.
 
 Every message in them goes through the same filters, dedupe, and batches as a live event, flagged
 `backfill`. It reads only messages more than 15 minutes old, after live events and search had
-their chance, so anything the pipeline keeps now was missed: it is logged as
-`reconcile gap slack:<channel>:<ts> (<reason>)`, and other people's are reported to qitt (see
-Bridge health; a message of mine can become my reply only because qitt heard about its
-conversation after I posted).
-Messages already sent are duplicates and messages the filters drop stay dropped.
+their chance, so anything the pipeline keeps now was missed: it is logged as `reconcile gap
+slack:<channel>:<ts> (<reason>)`, and other people's are reported to qitt (see Bridge health; a
+message of the owner's can become a reply event only because qitt heard about its conversation
+after it was posted). Messages already sent are duplicates and messages the filters drop stay
+dropped.
 
 Each run reads from where the previous one ended, at most 24 hours back. The window stays put when
 a read fails or stops at its 50-page cap, a thread lookup fails, or a batch is not flushed yet, so
-the next run (or a restart) reads it again; the search for my messages likewise starts over from
-its last complete pass. A conversation that is gone (`channel_not_found`, `thread_not_found`,
-`not_in_channel`, `is_archived`) is logged once and skipped until restart; anything else, a
-missing scope included, counts as a failed run. With no state file, the
-first run starts from now and reads nothing. Calls are 1.5 seconds apart, since
-`conversations.replies` and `conversations.history` allow about 50 a minute and live thread lookups
-share that budget; about 70 conversations take under two minutes.
+the next run (or a restart) reads it again; the search for the owner's messages likewise starts
+over from its last complete pass. A conversation that is gone (`channel_not_found`,
+`thread_not_found`, `not_in_channel`, `is_archived`) is logged once and skipped until restart;
+anything else, a missing scope included, counts as a failed run. With no state file, the first run
+starts from now and reads nothing. Calls are 1.5 seconds apart, since `conversations.replies` and
+`conversations.history` allow about 50 a minute and live thread lookups share that budget; about
+70 conversations take under two minutes.
 
 ## Bridge health
 
 A problem that can lose or delay messages becomes a `bridge_health` event in the next batch, so
-qitt can tell me instead of it sitting in the log. Each kind goes out at most once an hour and is
+qitt can tell the owner instead of it sitting in the log. Each kind goes out at most once an hour and is
 logged as `health <kind>: <text>`:
 
 | Kind | When |
@@ -266,10 +274,11 @@ traffic channels: C0123 (channel) 1200, C0456 (group) 800, ..., 212 other channe
 
 The workspace totals cover the last hour, which is what Slack holds against the cap; they are
 there even when no live events came in during the interval, as when Slack drops them all. Events
-authorized for anyone but me (another user or a bot of the same app) are listed after them as
-`authorized for others`. When Slack starts rate-limiting a workspace (its first `app_rate_limited`
-after 3 minutes without one), the same three lines go out for that workspace's last hour, prefixed
-`traffic at rate limit of <team>`. Lines carry ids only; the report makes no Slack calls.
+authorized for anyone but the owner (another user or a bot of the same app) are listed after them
+as `authorized for others`. When Slack starts rate-limiting a workspace (its first
+`app_rate_limited` after 3 minutes without one), the same three lines go out for that workspace's
+last hour, prefixed `traffic at rate limit of <team>`. Lines carry ids only; the report makes no
+Slack calls.
 
 Each `app_rate_limited` is logged with its workspace and the minute Slack started limiting it, and
 each Socket Mode `hello` as `hello: app <id>, <n> open connections`. Slack spreads events across
