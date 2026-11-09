@@ -6,8 +6,7 @@ All data lives under `~/.local/state/qitt/replay/<window>/` and is never committ
 1. **Export** the window into `slack-events.jsonl`, `jira-events.jsonl`, `t3-threads.jsonl`, and
    `links.jsonl` (which events led to a T3 thread or a reply from the owner). Done read-only
    through the Slack MCP tools, the JIRA CLI, and T3's thread list (no exporter ships here). One
-   JSON object per
-   line, with the fields batch.py and score.py read:
+   JSON object per line, with the fields batch.py and score.py read:
    - `slack-events.jsonl`: `id`, `ts`, `thread_ts`, `channel_id`, `channel_type`, `channel_name`,
      `user_id`, `user_name`, `time_local`, `mentions_me`, `permalink`, `text`, `from_me`, `is_bot`
    - `jira-events.jsonl`: `id`, `timestamp` (ISO), `event`, `issue_key`, `summary`, `actor_id`,
