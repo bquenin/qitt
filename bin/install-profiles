@@ -67,6 +67,29 @@ for name in ${wanted[@]+"${wanted[@]}"}; do
   dirs+=("$dir")
 done
 
+# Every skills/ folder to install: the shared one, then each source's. Two of them must not hold
+# a skill of the same name: copying both would mix their files in one folder. Checked here,
+# before anything is written.
+skill_dirs=()
+skill_names=()
+skill_owners=()
+for skills in "$repo/skills" ${dirs[@]+"${dirs[@]/%//skills}"}; do
+  if [[ ! -d $skills ]]; then continue; fi
+  for entry in "$skills"/*; do
+    if [[ ! -e $entry ]]; then continue; fi
+    skill=${entry##*/}
+    for i in ${skill_names[@]+"${!skill_names[@]}"}; do
+      if [[ ${skill_names[$i]} == "$skill" ]]; then
+        echo "skill '$skill' is in both ${skill_owners[$i]} and $skills; rename one of them" >&2
+        exit 1
+      fi
+    done
+    skill_names+=("$skill")
+    skill_owners+=("$skills")
+  done
+  skill_dirs+=("$skills")
+done
+
 sections=$(mktemp)
 trap 'rm -f "$sections"' EXIT
 
@@ -126,11 +149,9 @@ for profile in qitt worker; do
   # Shared skills (skills/<name>/) and each source's own go into every profile; replace so
   # removed skills disappear.
   rm -rf "$dst/.claude/skills"
-  for skills in "$repo/skills" ${dirs[@]+"${dirs[@]/%//skills}"}; do
-    if [[ -d $skills ]]; then
-      mkdir -p "$dst/.claude/skills"
-      cp -R "$skills/." "$dst/.claude/skills/"
-    fi
+  for skills in ${skill_dirs[@]+"${skill_dirs[@]}"}; do
+    mkdir -p "$dst/.claude/skills"
+    cp -R "$skills/." "$dst/.claude/skills/"
   done
   echo "installed $dst"
 done

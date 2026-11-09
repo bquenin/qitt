@@ -13,7 +13,7 @@ them. [architecture.md](architecture.md) shows where sources sit in the whole.
 | `worker.md` | If workers need something specific | The workers' charter section: how to read an item in full, how a reply goes out, how to name places. |
 | `intake.md` | If events come by webhook | The prompt of the webhook task that delivers this source's events to the qitt thread. |
 | `deny.txt` | If the agents have a tool that sends there | Tool names to deny in both profiles, one per line, `#` for comments. This is what keeps "it never sends anything for me" true for the source. |
-| `skills/` | Optional | Skills installed into both profiles, next to the shared ones in `skills/`. |
+| `skills/` | Optional | Skills installed into both profiles, next to the shared ones in `skills/`. Each skill needs a name no other enabled source and no shared skill uses: the installer stops on a clash. |
 | Anything else | Optional | A bridge, the prompt of a scheduled sweep, a README. The installer ignores them. |
 
 [`sources/_template/`](../sources/_template/) has a skeleton of each file.

@@ -106,6 +106,17 @@ describe("install-profiles sources", () => {
     }
   });
 
+  it("fails before writing anything when a source's skill has the name of another skill", () => {
+    const source = join(tmp, "clash-home", ".config", "qitt", "sources", "teams");
+    mkdirSync(join(source, "skills", "google-docs"), { recursive: true });
+    writeFileSync(join(source, "qitt.md"), "### Teams\n");
+    writeFileSync(join(source, "skills", "google-docs", "SKILL.md"), "mine\n");
+    const { dest, status, stderr } = install("clash", { QITT_SOURCES: "teams" });
+    assert.equal(status, 1);
+    assert.match(stderr, /skill 'google-docs' is in both .*\/skills and .*\/sources\/teams\/skills/);
+    assert.equal(existsSync(dest), false);
+  });
+
   it("writes that no source is installed when the list is empty", () => {
     const { dest, status, stderr } = install("none", { QITT_SOURCES: "" });
     assert.equal(status, 0, stderr);
