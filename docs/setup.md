@@ -6,9 +6,13 @@ under `~/.config/qitt/` and is never committed.
 ## Profiles
 
 `bin/install-profiles` installs the qitt and worker T3 project roots. Register them as T3 projects
-once (`qitt`, `qitt workers`) and put the workers project id in `~/.config/qitt/context.md`. Set
-`QITT_SLACK_MCP_SERVER` when running it if your Slack MCP server is not named `slack-cli` (see the
-README, Dependencies).
+once (`qitt`, `qitt workers`) and put the workers project id in `~/.config/qitt/context.md`.
+
+Each root is assembled from the core in `profiles/` and the sources you enable: their charter
+sections, the tools they deny, and their skills. Without `~/.config/qitt/sources.txt`, the
+installer enables `slack` and `jira`. [sources.md](sources.md) says how to choose the sources and
+add your own. Set `QITT_SLACK_MCP_SERVER` when running it if your Slack MCP server is not named
+`slack-cli` (see [sources/slack/README.md](../sources/slack/README.md)).
 
 The installer also copies `~/.config/qitt/context.md` into each root as `context.local.md`
 (mode 600), which the charters import as `@context.local.md`. Claude Code loads imports from
@@ -23,11 +27,12 @@ installer warns and leaves the import out, and the charters fall back: workers r
 
 Launch a thread in the qitt project, pin it, and have it create its own intake tasks (a webhook
 task binds to the thread that creates it): `schedule_task` with `{"type": "webhook"}`, one per
-source, prompts from `prompts/intake-slack.md` and `prompts/intake-jira.md`. Saved-for-later
-items come from the Slack bridge, in the same Slack batches (see below); there is no separate task.
+source, each with its source's prompt: `sources/slack/intake.md` and `sources/jira/intake.md`.
+Saved-for-later items come from the Slack bridge, in the same Slack batches (see below); there is
+no separate task.
 
 The ticket sweep is a fixed-time task, also created by the qitt thread: weekday mornings, prompt
-from `prompts/ticket-sweep.md`. It catches playbook tickets the JIRA intake never sees (tickets
+from `sources/jira/sweep.md`. It catches playbook tickets the JIRA intake never sees (tickets
 assigned to someone else).
 
 Without T3 Connect, `schedule_task` returns no webhook URL. The local route is
@@ -62,11 +67,12 @@ and the relay's subscription.
 
 ## Slack bridge
 
-`bin/qitt-bridge` keeps `bridge/slack-bridge.mjs` running under a restart loop; `~/.profile` calls
-`qitt-bridge ensure`. It reads `~/.config/qitt/bridge.json` and the two Slack tokens in
-`~/.config/qitt/secrets/`, and posts batches to T3 on localhost (not through the filter). It also
-polls my saved-for-later items (needs `search:read` on the user token) and sends new saves and
-removals as events in the same batches. Details in [bridge/README.md](../bridge/README.md).
+`bin/qitt-bridge` keeps `sources/slack/bridge/slack-bridge.mjs` running under a restart loop;
+`~/.profile` calls `qitt-bridge ensure`. It reads `~/.config/qitt/bridge.json` and the two Slack
+tokens in `~/.config/qitt/secrets/`, and posts batches to T3 on localhost (not through the
+filter). It also polls my saved-for-later items (needs `search:read` on the user token) and sends
+new saves and removals as events in the same batches. Details in
+[sources/slack/bridge/README.md](../sources/slack/bridge/README.md).
 
 ## Configuration
 
@@ -75,7 +81,9 @@ Start from `config/example/`. Nothing here is committed.
 | File | What |
 | --- | --- |
 | `~/.config/qitt/context.md` | Copied into both profiles by `bin/install-profiles` and imported by the charters (re-run it after editing): who the owner is (name, first name, timezone, ids), T3 project and thread ids, peer environments, user groups, support channels, systems owned, priority requesters, out-of-scope requests, ticket playbooks, bots, remind-only topics, and a **Workers** section (evidence sources, dashboards, voice rules, sign-in helpers, what needs the laptop). |
-| `~/.config/qitt/bridge.json` | Slack bridge config. Keys in [bridge/README.md](../bridge/README.md#local-files), including `timezone` and `timezoneLabel`. |
+| `~/.config/qitt/sources.txt` | Optional: the sources `bin/install-profiles` enables, one name per line. Without it, `slack` and `jira`. |
+| `~/.config/qitt/sources/` | Optional: sources of your own, one folder each, found before the ones in the repo. See [sources.md](sources.md). |
+| `~/.config/qitt/bridge.json` | Slack bridge config. Keys in [sources/slack/bridge/README.md](../sources/slack/bridge/README.md#local-files), including `timezone` and `timezoneLabel`. |
 | `~/.config/qitt/filter.json` | Optional hook filter config; every key has a default (below). |
 | `~/.config/qitt/secrets/` | Slack tokens, webhook URLs, the relay's HMAC secret, cookie jars (mode 600). |
 
@@ -96,7 +104,7 @@ same. Both default to the system timezone.
 
 - **Slack** (bridge): `{"id": "<batch id>", "count": n, "window": "<label>", "events": [...],
   "digest": "<text>"}`. The prompt reads only `digest`, the batch rendered as compact text (see
-  [bridge/README.md](../bridge/README.md#body)).
+  [sources/slack/bridge/README.md](../sources/slack/bridge/README.md#body)).
 - **JIRA** (relay): an envelope `{"id", "source", "type", "action", "received_at", "payload"}`,
   where `payload` is the JIRA webhook body. If your relay sends another shape, adapt
-  `prompts/intake-jira.md`.
+  `sources/jira/intake.md`.

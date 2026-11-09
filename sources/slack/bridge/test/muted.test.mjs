@@ -104,7 +104,7 @@ describe("Muted", () => {
 });
 
 describe("qitt-mute", () => {
-  const cli = fileURLToPath(new URL("../../bin/qitt-mute", import.meta.url));
+  const cli = fileURLToPath(new URL("../../../../bin/qitt-mute", import.meta.url));
   const run = (f, ...args) => execFileSync(cli, args, { env: { ...process.env, QITT_MUTED_FILE: f }, encoding: "utf8" });
 
   it("mutes, lists, and unmutes", () => {

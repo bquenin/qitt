@@ -6,7 +6,7 @@
 set -u
 
 repo=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)
-script=$repo/bridge/slack-bridge.mjs
+script=$repo/sources/slack/bridge/slack-bridge.mjs
 lock=$HOME/.local/state/qitt/slack-bridge.lock
 pidfile=$HOME/.local/state/qitt/slack-bridge.supervisor.pid
 log=$HOME/.local/state/qitt/logs/slack-bridge.log
@@ -41,7 +41,7 @@ if running; then
   exit 0
 fi
 
-[[ -d $repo/bridge/node_modules ]] || fail "dependencies missing; run: npm ci --prefix $repo/bridge"
+[[ -d $repo/sources/slack/bridge/node_modules ]] || fail "dependencies missing; run: npm ci --prefix $repo/sources/slack/bridge"
 
 # flock keeps two logins from starting two bridges; the lock dies with the supervisor. The
 # supervisor restarts the bridge 15 s after any exit, so a crash does not wait for the next login.
