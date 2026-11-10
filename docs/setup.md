@@ -9,7 +9,7 @@ under `~/.config/qitt/` and is never committed.
 once (`qitt`, `qitt workers`) and put the workers project id in `~/.config/qitt/context.md`.
 
 Each root is assembled from the core in `agents/` and the sources you enable: their charter
-sections, the tools they deny, and their skills. Without `~/.config/qitt/sources.txt`, the
+sections and the tools they deny. Without `~/.config/qitt/sources.txt`, the
 installer enables `slack` and `jira`. [sources.md](sources.md) says how to choose the sources and
 add your own. Set `QITT_SLACK_MCP_SERVER` when running it if your Slack MCP server is not named
 `slack-cli` (see [sources/slack/README.md](../sources/slack/README.md)).
@@ -28,7 +28,7 @@ home directory would be added to every thread, and a `CLAUDE.md` above the root 
 `~/.claude/CLAUDE.md` is when Claude Code runs with another config directory) would keep the
 charter from loading at all. Other agents ignore the file.
 
-The deny lists and the skills are under `.claude/`, which only Claude Code reads: see
+The deny lists are under `.claude/`, which only Claude Code reads: see
 [architecture.md](architecture.md#what-the-installer-assembles) before running the threads on
 another agent.
 
