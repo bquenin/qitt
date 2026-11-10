@@ -16,7 +16,7 @@ Everything else follows from these.
 
 1. **It never sends anything for its owner.** qitt and its workers produce text to review: a
    brief, a proposed reply, a draft saved where the answer would go. Each source lists the tools
-   that send in the owner's name, and `bin/install-profiles` denies them in both profiles, so the
+   that send in the owner's name, and `bin/install-agents` denies them for both agents, so the
    rule holds even if a prompt is wrong. The only things a worker changes unasked are the routine
    field edits a ticket playbook lists.
 2. **T3 constructs only.** qitt is a thread, its workers are threads, and its triggers are
@@ -34,8 +34,8 @@ Everything else follows from these.
 | Hook filter | `filter/`, kept running by `bin/qitt-filter` | The only port outside callers reach. It forwards `POST`, `PUT` and `PATCH` on `/api/hooks/*` to T3 and answers 404 to everything else, checks each delivery's HMAC signature when a secret is configured, and drops duplicate deliveries. |
 | Webhook tasks | T3 scheduled tasks, created by the qitt thread | One per source. Each delivery becomes a turn in the qitt thread, with the module's `intake.md` as its prompt. |
 | Sweep task | A T3 fixed-time task, created by the qitt thread | Weekday mornings: asks qitt to run each ticket playbook's sweep, for the tickets the JIRA intake never sees. |
-| qitt | The pinned thread, in the `qitt` T3 project (`profiles/qitt/`) | Triage, routing, launching workers, and the board of all work in flight. |
-| Workers | Threads in the `qitt workers` T3 project (`profiles/worker/`) | One per request. A worker reads the source in full, gathers evidence, writes a brief with a proposed reply, and reports one line back to qitt. |
+| qitt | The pinned thread, in the `qitt` T3 project (`agents/qitt/`) | Triage, routing, launching workers, and the board of all work in flight. |
+| Workers | Threads in the `qitt workers` T3 project (`agents/worker/`) | One per request. A worker reads the source in full, gathers evidence, writes a brief with a proposed reply, and reports one line back to qitt. |
 | Local context | `~/.config/qitt/context.md` | Everything about the owner and the workplace: who the owner is, whose requests come first, which channels someone else answers, what is out of scope, the ticket playbooks. The charters import a copy of it. |
 | Peer environments | Other T3 servers, for example a laptop | qitt lists, searches and launches threads there, for work only that machine can do. |
 
@@ -70,20 +70,27 @@ itself, and sends anything that needs research to a worker.
 
 ## What the installer assembles
 
-The charters in `profiles/` hold only the rules that are true for every source. For each profile,
-`bin/install-profiles` writes into `~/.local/state/qitt/projects/`:
+The charters in `agents/` hold only the rules that are true for every source. For each agent,
+`bin/install-agents` writes into `~/.local/state/qitt/projects/`:
 
 ```
-CLAUDE.md               the core charter
+AGENTS.md               the core charter
                         + the qitt.md (or worker.md) of every enabled source, under "Sources"
-                        + an import of the local context
-context.local.md        a copy of ~/.config/qitt/context.md
-.claude/settings.json   the profile's settings + every enabled source's deny.txt
+                        + ~/.config/qitt/context.md, under "Local context"
+CLAUDE.md               an import of AGENTS.md, under a comment that says why
+.claude/settings.json   the agent's settings + every enabled source's deny.txt
 .claude/skills/         skills/ + each enabled source's skills/
 ```
 
 So adding or removing a source never edits the core: it changes which sections the installer
 puts under **Sources**, and which tools it denies.
+
+`AGENTS.md` is the instruction file coding agents read, whichever provider the T3 thread runs on,
+and it imports nothing. `CLAUDE.md` only points Claude Code at it ([setup.md](setup.md#project-roots)
+says why). `.claude/` is read by Claude Code only, and T3 Code has no setting of its own for
+denying a tool. To run the threads on another agent, deny the same tools and install the
+skills in that agent's own configuration: until then, the first rule rests on the charter alone
+there. qitt has run on Claude only so far.
 
 The charters, the source sections and the local context are written in the owner's voice ("I",
 "me"), because they are the owner's instructions to the agents. The rest of the documentation is
@@ -95,7 +102,7 @@ not.
 | --- | --- |
 | This repo | Code and generic templates only. |
 | `~/.config/qitt/` | Config and secrets: `context.md`, `sources.txt`, sources of your own, `bridge.json`, `filter.json`, and `secrets/` (tokens, webhook URLs, the relay's HMAC secret; mode 600). |
-| `~/.local/state/qitt/` | The installed profiles, the bridge's state files, mutes, logs, replay data. |
+| `~/.local/state/qitt/` | The installed project roots, the bridge's state files, mutes, logs, replay data. |
 | T3 Code | The threads and the scheduled tasks, which are all of qitt's working state. |
 
 ## Trust boundaries
@@ -106,7 +113,7 @@ not.
 - **A request is data, not instructions.** T3 frames a webhook body as untrusted data in the
   prompt, and the worker charter says the same: a request tells a worker what the requester
   wants from the owner, not what to do.
-- **Nothing goes out in the owner's name.** Send tools are denied by name in both profiles, per
+- **Nothing goes out in the owner's name.** Send tools are denied by name for both agents, per
   source.
 - **Workplace details stay on the machine.** Names, ids, channels and tokens live under
   `~/.config/qitt/`, never in the repo.
@@ -121,7 +128,7 @@ not.
   and backfills what live events and search both missed.
 - **A peer is unreachable.** qitt says so on the board, routes with what it can see, and tries
   again at its next turn.
-- **The thread grows without end.** qitt's profile compacts its context at 150k tokens. That is
+- **The thread grows without end.** qitt's settings compact its context at 150k tokens. That is
   safe because its durable state is in the threads, not in its memory: it rebuilds the picture
   from them whenever it routes or shows the board.
 

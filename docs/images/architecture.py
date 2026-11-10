@@ -117,7 +117,7 @@ box(670, 160, 480, 118, "Scheduled tasks, bound to the qitt thread", [
 ])
 box(670, 328, 480, 200, "qitt: the pinned thread", [
     "Charter = core rules + one section per installed source + the local",
-    "context, assembled by bin/install-profiles.",
+    "context, assembled by bin/install-agents.",
     "",
     "For each item it decides: nothing needed, a reminder, a short brief,",
     "a follow-up in the thread that owns it, or a new worker.",
@@ -186,7 +186,7 @@ rect(30, 802, 1470, 84, "#ffffff", GREY, 1.5)
 text(48, 834, "A source module is a folder.", 13.5, "bold")
 text(236, 834, "sources/<name>/ holds qitt.md and worker.md (charter sections), intake.md (the webhook task's prompt), "
      "deny.txt (send tools to block) and, if it needs one, a bridge.", 13.5)
-text(48, 860, "List it in ~/.config/qitt/sources.txt, run bin/install-profiles, and have the qitt thread create its "
+text(48, 860, "List it in ~/.config/qitt/sources.txt, run bin/install-agents, and have the qitt thread create its "
      "webhook task. A module of your own can also live in ~/.config/qitt/sources/, outside the repo.", 13.5)
 
 out.append("</svg>")

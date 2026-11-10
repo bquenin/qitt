@@ -3,25 +3,34 @@
 How qitt is wired on the machine that runs it. Anything with a name, hostname, id, or token lives
 under `~/.config/qitt/` and is never committed.
 
-## Profiles
+## Project roots
 
-`bin/install-profiles` installs the qitt and worker T3 project roots. Register them as T3 projects
+`bin/install-agents` installs the qitt and worker T3 project roots. Register them as T3 projects
 once (`qitt`, `qitt workers`) and put the workers project id in `~/.config/qitt/context.md`.
 
-Each root is assembled from the core in `profiles/` and the sources you enable: their charter
+Each root is assembled from the core in `agents/` and the sources you enable: their charter
 sections, the tools they deny, and their skills. Without `~/.config/qitt/sources.txt`, the
 installer enables `slack` and `jira`. [sources.md](sources.md) says how to choose the sources and
 add your own. Set `QITT_SLACK_MCP_SERVER` when running it if your Slack MCP server is not named
 `slack-cli` (see [sources/slack/README.md](../sources/slack/README.md)).
 
-The installer also copies `~/.config/qitt/context.md` into each root as `context.local.md`
-(mode 600), which the charters import as `@context.local.md`. Claude Code loads imports from
-inside the project without asking, but an import from outside it (including through a symlink)
-needs an approval that headless threads never give, so the file is copied. **Re-run
-`bin/install-profiles` after editing `context.md`**; threads started afterwards see the new
-version. `QITT_CONTEXT=<path>` installs another file (for tests). If the file is missing, the
-installer warns and leaves the import out, and the charters fall back: workers read
-`~/.config/qitt/context.md` themselves, and qitt stays in shadow mode.
+Each root holds one `AGENTS.md`, the instruction file coding agents read. The installer writes
+`~/.config/qitt/context.md` into it, under **Local context**, so the file is mode 600 and imports
+nothing. **Re-run `bin/install-agents` after editing `context.md`**; threads started afterwards
+see the new version. `QITT_CONTEXT=<path>` installs another file (for tests). If the file is
+missing, the installer warns and leaves the section empty, and the charters fall back: workers
+read `~/.config/qitt/context.md` themselves, and qitt stays in shadow mode.
+
+Next to it the installer writes a `CLAUDE.md` that only imports it (`@AGENTS.md`). Claude Code
+reads an `AGENTS.md` by itself only when it finds no `CLAUDE.md` in the root or above it, and it
+then also loads every `AGENTS.md` above the root. So without that file, an `AGENTS.md` in the
+home directory would be added to every thread, and a `CLAUDE.md` above the root (which is what
+`~/.claude/CLAUDE.md` is when Claude Code runs with another config directory) would keep the
+charter from loading at all. Other agents ignore the file.
+
+The deny lists and the skills are under `.claude/`, which only Claude Code reads: see
+[architecture.md](architecture.md#what-the-installer-assembles) before running the threads on
+another agent.
 
 ## The qitt thread
 
@@ -80,8 +89,8 @@ Start from `config/example/`. Nothing here is committed.
 
 | File | What |
 | --- | --- |
-| `~/.config/qitt/context.md` | Copied into both profiles by `bin/install-profiles` and imported by the charters (re-run it after editing): who the owner is (name, first name, timezone, ids), T3 project and thread ids, peer environments, user groups, support channels, systems owned, priority requesters, out-of-scope requests, ticket playbooks, bots, remind-only topics, and a **Workers** section (evidence sources, dashboards, voice rules, sign-in helpers, what needs the laptop). |
-| `~/.config/qitt/sources.txt` | Optional: the sources `bin/install-profiles` enables, one name per line. Without it, `slack` and `jira`. |
+| `~/.config/qitt/context.md` | Written into both charters by `bin/install-agents` (re-run it after editing): who the owner is (name, first name, timezone, ids), T3 project and thread ids, peer environments, user groups, support channels, systems owned, priority requesters, out-of-scope requests, ticket playbooks, bots, remind-only topics, and a **Workers** section (evidence sources, dashboards, voice rules, sign-in helpers, what needs the laptop). |
+| `~/.config/qitt/sources.txt` | Optional: the sources `bin/install-agents` enables, one name per line. Without it, `slack` and `jira`. |
 | `~/.config/qitt/sources/` | Optional: sources of your own, one folder each, found before the ones in the repo. See [sources.md](sources.md). |
 | `~/.config/qitt/bridge.json` | Slack bridge config. Keys in [sources/slack/bridge/README.md](../sources/slack/bridge/README.md#local-files), including `timezone` and `timezoneLabel`. |
 | `~/.config/qitt/filter.json` | Optional hook filter config; every key has a default (below). |

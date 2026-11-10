@@ -12,8 +12,8 @@ them. [architecture.md](architecture.md) shows where sources sit in the whole.
 | `qitt.md` | Always | qitt's charter section: what an event looks like, the `source` and `source-key` of an item, and the rules that apply only to this source. |
 | `worker.md` | If workers need something specific | The workers' charter section: how to read an item in full, how a reply goes out, how to name places. |
 | `intake.md` | If events come by webhook | The prompt of the webhook task that delivers this source's events to the qitt thread. |
-| `deny.txt` | If the agents have a tool that sends there | Tool names to deny in both profiles, one per line, `#` for comments. This is what keeps "it never sends anything for its owner" true for the source. |
-| `skills/` | Optional | Skills installed into both profiles, next to the shared ones in `skills/`. Each skill needs a name no other enabled source and no shared skill uses: the installer stops on a clash. |
+| `deny.txt` | If the agents have a tool that sends there | Tool names to deny for both agents, one per line, `#` for comments. The installer writes them to Claude Code's settings. This is what keeps "it never sends anything for its owner" true for the source. |
+| `skills/` | Optional | Skills installed for both agents, next to the shared ones in `skills/`. Each skill needs a name no other enabled source and no shared skill uses: the installer stops on a clash. |
 | Anything else | Optional | A bridge, the prompt of a scheduled sweep, a README. The installer ignores them. |
 
 [`sources/_template/`](../sources/_template/) has a skeleton of each file.
@@ -22,7 +22,7 @@ them. [architecture.md](architecture.md) shows where sources sit in the whole.
 
 ## Which sources are installed
 
-`bin/install-profiles` reads the list of enabled sources from, in this order:
+`bin/install-agents` reads the list of enabled sources from, in this order:
 
 1. `QITT_SOURCES`, names separated by spaces or commas, for one run: `QITT_SOURCES="jira teams"`.
 2. `~/.config/qitt/sources.txt`, one name per line (start from `config/example/sources.txt`).
@@ -32,7 +32,7 @@ It looks each name up in `~/.config/qitt/sources/<name>/` first, then in `source
 So a source of your own, or your own version of one that ships, needs no fork, and its workplace
 details stay out of the repo.
 
-For each profile, the installer puts every enabled source's section under the **Sources** heading
+For each agent, the installer puts every enabled source's section under the **Sources** heading
 of the charter, in the order listed, merges every `deny.txt` into the deny list, and copies
 `skills/`. Re-run it after any change to a source, as you do after editing `context.md`.
 
@@ -108,7 +108,7 @@ Teams does not ship here. This is the path, not a tested module.
 
    ```bash
    printf 'slack\njira\nteams\n' >| ~/.config/qitt/sources.txt
-   bin/install-profiles
+   bin/install-agents
    ```
 
 7. **Create the webhook task.** In the qitt thread, ask it to create a webhook task with your

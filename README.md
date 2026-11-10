@@ -1,10 +1,17 @@
 # qitt
 
-A proactive chief of staff that lives inside [T3 Code](https://github.com/pingdotgg/t3code). One
-pinned T3 thread watches the requests that reach its owner (through Slack and JIRA here, or any
-source you add), starts T3 worker threads that research each one ahead of time, and keeps a live
-picture of all active work, so it can be asked anything without context. It never replies on the
-owner's behalf: every output is proposed text for the owner to review.
+A proactive chief of staff that lives inside [T3 Code](https://github.com/pingdotgg/t3code).
+
+- **Chief of staff.** One pinned thread watches the requests that reach its owner and keeps a
+  live picture of all work in flight, so it can be asked anything without context.
+- **Proactive.** It triages each request as it arrives and starts a worker thread to research it
+  ahead of time. It never sends anything: every output is proposed text for the owner to review.
+- **Vendor-agnostic.** It is built from T3 Code threads and scheduled tasks, and its rules are
+  `AGENTS.md` files any coding agent reads. It has run on Claude only so far.
+- **Customizable.** Its behaviour is plain Markdown: two charters written in the owner's voice,
+  and a local context file for your people, priorities and playbooks.
+- **Extendable.** Slack and JIRA ship as two folders under `sources/`. Teams, email or anything
+  else is [one more folder](docs/sources.md).
 
 ## How it works
 
@@ -12,12 +19,9 @@ owner's behalf: every output is proposed text for the owner to review.
 
 - **T3 constructs only.** qitt is a thread; intake and the ticket sweep are scheduled tasks bound to
   it. Code outside T3 exists only where something must hold a connection.
-- **Never sends.** Output is proposed text; each source's send tools are denied in the profiles.
-  Workers are research-only, except the routine field edits a ticket playbook lists and work the
-  owner asks a worker for directly.
-- **Sources are modules.** Slack and JIRA are two folders under `sources/`, and the core charters
-  know nothing about either. Adding Teams, email or anything else is one more folder, in the repo
-  or in your own config: see [docs/sources.md](docs/sources.md).
+- **Never sends.** Each source's send tools are denied for qitt and its workers. Workers are
+  research-only, except the routine field edits a ticket playbook lists and work the owner asks a
+  worker for directly.
 - **Runs on one always-on machine.** Events that arrive while it is down are lost, by design.
 
 [docs/architecture.md](docs/architecture.md) describes each part and how a request travels through
@@ -27,10 +31,10 @@ them. Planned, not in this repo yet: an interval supervision pass and a JQL back
 
 | Path | What |
 | --- | --- |
-| `profiles/` | The core of the qitt and worker T3 project roots: a charter (`CLAUDE.md`) with the rules that hold for every source, and `.claude/settings.json` (for qitt a 150k auto-compact window: every call re-reads the whole thread, and its durable state lives in the threads, not its context). |
+| `agents/` | The two agents qitt is made of, `qitt` and `worker`. For each, a charter (`AGENTS.md`) with the rules that hold for every source, and `.claude/settings.json` (for qitt a 150k auto-compact window: every call re-reads the whole thread, and its durable state lives in the threads, not its context). |
 | `sources/` | One folder per source of requests: its charter sections, its webhook task's prompt, the send tools to deny, and a bridge if it needs one. `slack/` and `jira/` ship here; `_template/` is a skeleton for your own. |
-| `skills/` | Skills installed into both profiles (e.g. `google-docs`: read Google Docs with the gws CLI). |
-| `bin/` | `install-profiles` assembles the profiles from the core, the enabled sources and your local `context.md` (re-run it after editing any of them); `qitt-filter` and `qitt-bridge` keep the filter and the Slack bridge running; `qitt-mute` mutes Slack conversations for the bridge. |
+| `skills/` | Skills installed for both agents (e.g. `google-docs`: read Google Docs with the gws CLI). |
+| `bin/` | `install-agents` assembles each agent's T3 project root from its charter, the enabled sources and your local `context.md` (re-run it after editing any of them); `qitt-filter` and `qitt-bridge` keep the filter and the Slack bridge running; `qitt-mute` mutes Slack conversations for the bridge. |
 | `docs/` | `architecture.md`: the parts and how a request travels. `sources.md`: what a source is made of and how to add one. `setup.md`: how the thread, intake tasks, and endpoint are wired, and every config key. |
 | `filter/` | Path filter that exposes only the T3 webhook routes, with optional HMAC signature checks (`bin/qitt-filter` runs it). Shared by every source that calls a webhook. |
 | `replay/` | Export of past events and shadow-mode scoring of qitt's triage. |
@@ -58,7 +62,7 @@ results) stays on the machine and is never committed:
 
 - `~/.config/qitt/` for config and secrets (start from `config/example/`; keys in
   [docs/setup.md](docs/setup.md#configuration)), and for sources of your own
-- `~/.local/state/qitt/` for the installed profiles, exported history, replay runs, and logs
+- `~/.local/state/qitt/` for the installed project roots, exported history, replay runs, and logs
 
 ## Tests
 

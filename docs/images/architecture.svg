@@ -46,7 +46,7 @@
 <rect x="670" y="328" width="480" height="200" rx="12" fill="#ffffff" stroke="#2f6db5" stroke-width="3.5"/>
 <text x="686" y="354" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#1e4f8a" text-anchor="start">qitt: the pinned thread</text>
 <text x="686" y="376" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">Charter = core rules + one section per installed source + the local</text>
-<text x="686" y="394" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">context, assembled by bin/install-profiles.</text>
+<text x="686" y="394" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">context, assembled by bin/install-agents.</text>
 <text x="686" y="412" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start"></text>
 <text x="686" y="430" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">For each item it decides: nothing needed, a reminder, a short brief,</text>
 <text x="686" y="448" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">a follow-up in the thread that owns it, or a new worker.</text>
@@ -109,5 +109,5 @@
 <rect x="30" y="802" width="1470" height="84" rx="12" fill="#ffffff" stroke="#71717a" stroke-width="1.5"/>
 <text x="48" y="834" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#27272a" text-anchor="start">A source module is a folder.</text>
 <text x="236" y="834" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="normal" fill="#27272a" text-anchor="start">sources/&lt;name&gt;/ holds qitt.md and worker.md (charter sections), intake.md (the webhook task's prompt), deny.txt (send tools to block) and, if it needs one, a bridge.</text>
-<text x="48" y="860" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="normal" fill="#27272a" text-anchor="start">List it in ~/.config/qitt/sources.txt, run bin/install-profiles, and have the qitt thread create its webhook task. A module of your own can also live in ~/.config/qitt/sources/, outside the repo.</text>
+<text x="48" y="860" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="normal" fill="#27272a" text-anchor="start">List it in ~/.config/qitt/sources.txt, run bin/install-agents, and have the qitt thread create its webhook task. A module of your own can also live in ~/.config/qitt/sources/, outside the repo.</text>
 </svg>
