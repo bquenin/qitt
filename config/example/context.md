@@ -5,7 +5,7 @@ edit): it writes this file into the qitt and worker charters. It must never be c
 charters are written in the owner's voice ("I", "me"): everything they need to know about the
 owner and the workplace comes from here.
 
-mode: live   # or shadow: decide and write what you would do, without launching (replays)
+mode: live   # or shadow: decide and write what you would do, without launching (a dry run)
 
 ## Me
 

@@ -104,7 +104,7 @@ not.
 | --- | --- |
 | This repo | Code and generic templates only. |
 | `~/.config/qitt/` | Config and secrets: `context.md`, `input-sources.txt`, sources of your own, `bridge.json`, `filter.json`, and `secrets/` (tokens, webhook URLs, the relay's HMAC secret; mode 600). |
-| `~/.local/state/qitt/` | The installed project roots, the bridge's state files, mutes, logs, replay data. |
+| `~/.local/state/qitt/` | The installed project roots, the bridge's state files, mutes, logs. |
 | T3 Code | The threads and the scheduled tasks, which are all of qitt's working state. |
 
 ## Trust boundaries
@@ -134,5 +134,5 @@ not.
   safe because its durable state is in the threads, not in its memory: it rebuilds the picture
   from them whenever it routes or shows the board.
 
-Before letting qitt act on a new setup, `replay/` runs it in shadow mode over past events and
-scores what it would have done.
+Before letting qitt act on a new setup, run it in shadow mode (`mode: shadow` in `context.md`): it
+triages and routes as usual, and writes what it would launch instead of launching it.
