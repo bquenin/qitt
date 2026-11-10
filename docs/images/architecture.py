@@ -70,11 +70,11 @@ out.append(f'<rect x="0" y="0" width="{W}" height="{H}" fill="#ffffff"/>')
 text(30, 42, "qitt: a proactive chief of staff inside T3 Code", 24, "bold")
 text(30, 68, "One pinned thread reads the requests that reach its owner, decides what each one needs, and hands the "
      "research to worker threads, so a brief and a proposed", 14, fill=MUTED)
-text(30, 88, "reply are ready ahead of time. It never sends anything for its owner. Every source of requests is a "
+text(30, 88, "reply are ready ahead of time. It never sends anything for its owner. Every input source is a "
      "module, and the core does not change when one is added.", 14, fill=MUTED)
 
-# Sources: one module per place requests come from.
-group(30, 110, 350, 662, "Sources: one module each", GREEN_FILL, GREEN, GREEN_TITLE)
+# Input sources: one module per place requests come from.
+group(30, 110, 350, 662, "Input sources: one module each", GREEN_FILL, GREEN, GREEN_TITLE)
 box(50, 160, 310, 150, "Slack", [
     "slack-bridge holds a Socket Mode",
     "connection for DMs and polls search for",
@@ -183,11 +183,11 @@ label(515, 688, ["read the source, save drafts"])
 
 # What a module is.
 rect(30, 802, 1470, 84, "#ffffff", GREY, 1.5)
-text(48, 834, "A source module is a folder.", 13.5, "bold")
-text(236, 834, "sources/<name>/ holds qitt.md and worker.md (charter sections), intake.md (the webhook task's prompt), "
+text(48, 834, "An input source is a folder.", 13.5, "bold")
+text(236, 834, "input-sources/<name>/ holds qitt.md and worker.md (charter sections), intake.md (the webhook task's prompt), "
      "deny.txt (send tools to block) and, if it needs one, a bridge.", 13.5)
-text(48, 860, "List it in ~/.config/qitt/sources.txt, run bin/install-agents, and have the qitt thread create its "
-     "webhook task. A module of your own can also live in ~/.config/qitt/sources/, outside the repo.", 13.5)
+text(48, 860, "List it in ~/.config/qitt/input-sources.txt, run bin/install-agents, and have the qitt thread create its "
+     "webhook task. A module of your own can also live in ~/.config/qitt/input-sources/, outside the repo.", 13.5)
 
 out.append("</svg>")
 Path(__file__).with_name("architecture.svg").write_text("\n".join(out) + "\n")

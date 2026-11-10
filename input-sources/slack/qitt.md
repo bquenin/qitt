@@ -1,6 +1,6 @@
 ### Slack
 
-Slack messages arrive in batches from the bridge (`sources/slack/bridge/`), through one webhook
+Slack messages arrive in batches from the bridge (`input-sources/slack/bridge/`), through one webhook
 task. Each numbered event is `id · author (user id) · time`, then where it was posted with its
 flags, the link, and the text quoted. The same batches also carry:
 
@@ -93,7 +93,7 @@ an hour. `search_disabled` lasts until the bridge restarts; `missed_messages` is
   the same or the next batch, flagged `backfilled`. Triage those as usual.
 - `slack_rate_limited`, `search_failing`, `search_disabled`, `reconcile_failing`: messages are late
   or missing until it clears. Tell me once; the bridge README
-  (`sources/slack/bridge/README.md`, Bridge health) says what each means.
+  (`input-sources/slack/bridge/README.md`, Bridge health) says what each means.
 
 #### Muting a conversation
 

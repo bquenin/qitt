@@ -29,8 +29,8 @@ Everything else follows from these.
 
 | Part | Where | What it does |
 | --- | --- | --- |
-| Sources | `sources/<name>/` here, or `~/.config/qitt/sources/<name>/` | One module per place requests come from. A module brings its charter sections, its webhook task's prompt, the send tools to deny, and a bridge if it needs one. Slack and JIRA ship here. See [sources.md](sources.md). |
-| Slack bridge | `sources/slack/bridge/`, kept running by `bin/qitt-bridge` | Holds a Socket Mode connection for DMs and polls Slack search for mentions, the owner's threads and watched channels. It filters, dedupes and batches what qitt should see, and POSTs each batch to the Slack webhook task on localhost. It reads Slack and never writes to it. |
+| Input sources | `input-sources/<name>/` here, or `~/.config/qitt/input-sources/<name>/` | One module per place requests come from. A module brings its charter sections, its webhook task's prompt, the send tools to deny, and a bridge if it needs one. Slack and JIRA ship here. See [input-sources.md](input-sources.md). |
+| Slack bridge | `input-sources/slack/bridge/`, kept running by `bin/qitt-bridge` | Holds a Socket Mode connection for DMs and polls Slack search for mentions, the owner's threads and watched channels. It filters, dedupes and batches what qitt should see, and POSTs each batch to the Slack webhook task on localhost. It reads Slack and never writes to it. |
 | Hook filter | `filter/`, kept running by `bin/qitt-filter` | The only port outside callers reach. It forwards `POST`, `PUT` and `PATCH` on `/api/hooks/*` to T3 and answers 404 to everything else, checks each delivery's HMAC signature when a secret is configured, and drops duplicate deliveries. |
 | Webhook tasks | T3 scheduled tasks, created by the qitt thread | One per source. Each delivery becomes a turn in the qitt thread, with the module's `intake.md` as its prompt. |
 | Sweep task | A T3 fixed-time task, created by the qitt thread | Weekday mornings: asks qitt to run each ticket playbook's sweep, for the tickets the JIRA intake never sees. |
@@ -103,7 +103,7 @@ not.
 | Place | What |
 | --- | --- |
 | This repo | Code and generic templates only. |
-| `~/.config/qitt/` | Config and secrets: `context.md`, `sources.txt`, sources of your own, `bridge.json`, `filter.json`, and `secrets/` (tokens, webhook URLs, the relay's HMAC secret; mode 600). |
+| `~/.config/qitt/` | Config and secrets: `context.md`, `input-sources.txt`, sources of your own, `bridge.json`, `filter.json`, and `secrets/` (tokens, webhook URLs, the relay's HMAC secret; mode 600). |
 | `~/.local/state/qitt/` | The installed project roots, the bridge's state files, mutes, logs, replay data. |
 | T3 Code | The threads and the scheduled tasks, which are all of qitt's working state. |
 

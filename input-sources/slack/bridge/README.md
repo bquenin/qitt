@@ -318,7 +318,7 @@ share of the events.
 
 `window` spans the earliest to the latest message in the batch. Times are in `timezone` with its
 label (`America/New_York`, `ET`, in these examples). The webhook task's prompt
-(`sources/slack/intake.md`) reads only `digest` (`lib/digest.mjs`): one placeholder, so T3 frames
+(`input-sources/slack/intake.md`) reads only `digest` (`lib/digest.mjs`): one placeholder, so T3 frames
 the batch as untrusted data once, and plain text instead of pretty-printed JSON, which costs far
 fewer tokens. `events` stays in the body for `--dry-run` and tests. Each event becomes:
 
@@ -349,11 +349,11 @@ down are lost, by design.
 ## Running
 
 ```bash
-npm ci --prefix sources/slack/bridge   # once, and after dependency changes
+npm ci --prefix input-sources/slack/bridge   # once, and after dependency changes
 bin/qitt-bridge                        # start if not running
 bin/qitt-bridge stop
-node sources/slack/bridge/slack-bridge.mjs --dry-run   # foreground; print batch bodies instead of POSTing
-npm test --prefix sources/slack/bridge
+node input-sources/slack/bridge/slack-bridge.mjs --dry-run   # foreground; print batch bodies instead of POSTing
+npm test --prefix input-sources/slack/bridge
 ```
 
 Add `qitt-bridge ensure` to `~/.profile` so the bridge comes back after a restart. It is

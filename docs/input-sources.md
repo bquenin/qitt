@@ -1,9 +1,10 @@
-# Sources
+# Input sources
 
-A source is a place requests come from. Slack and JIRA ship in this repo, and you can add your
-own: Teams, email, GitHub, a pager. Each source is one folder. qitt's core rules (triage, routing,
-workers, the board) are the same whatever an event came from, so adding a source never touches
-them. [architecture.md](architecture.md) shows where sources sit in the whole.
+An input source, or source for short, is a place requests come from. Slack and JIRA ship in this
+repo, and you can add your own: Teams, email, GitHub, a pager. Each source is one folder. qitt's
+core rules (triage, routing, workers, the board) are the same whatever an event came from, so
+adding a source never touches them. [architecture.md](architecture.md) shows where sources sit in
+the whole.
 
 ## What a source is made of
 
@@ -15,19 +16,19 @@ them. [architecture.md](architecture.md) shows where sources sit in the whole.
 | `deny.txt` | If the agents have a tool that sends there | Tool names to deny for both agents, one per line, `#` for comments. The installer writes them to Claude Code's settings. This is what keeps "it never sends anything for its owner" true for the source. |
 | Anything else | Optional | A bridge, the prompt of a scheduled sweep, a README. The installer ignores them. |
 
-[`sources/_template/`](../sources/_template/) has a skeleton of each file.
-[`sources/slack/`](../sources/slack/) is a source with a bridge, and
-[`sources/jira/`](../sources/jira/) is one without.
+[`input-sources/_template/`](../input-sources/_template/) has a skeleton of each file.
+[`input-sources/slack/`](../input-sources/slack/) is a source with a bridge, and
+[`input-sources/jira/`](../input-sources/jira/) is one without.
 
 ## Which sources are installed
 
 `bin/install-agents` reads the list of enabled sources from, in this order:
 
-1. `QITT_SOURCES`, names separated by spaces or commas, for one run: `QITT_SOURCES="jira teams"`.
-2. `~/.config/qitt/sources.txt`, one name per line (start from `config/example/sources.txt`).
+1. `QITT_INPUT_SOURCES`, names separated by spaces or commas, for one run: `QITT_INPUT_SOURCES="jira teams"`.
+2. `~/.config/qitt/input-sources.txt`, one name per line (start from `config/example/input-sources.txt`).
 3. Otherwise, `slack` and `jira`.
 
-It looks each name up in `~/.config/qitt/sources/<name>/` first, then in `sources/<name>/` here.
+It looks each name up in `~/.config/qitt/input-sources/<name>/` first, then in `input-sources/<name>/` here.
 So a source of your own, or your own version of one that ships, needs no fork, and its workplace
 details stay out of the repo.
 
@@ -36,8 +37,8 @@ of the charter, in the order listed, and merges every `deny.txt` into the deny l
 after any change to a source, as you do after editing `context.md`.
 
 A source installs no skill and no MCP server. If its agents need one to read the source or save a
-draft, its README says so, as [`sources/slack/`](../sources/slack/README.md) and
-[`sources/jira/`](../sources/jira/README.md) do, and it comes from your own agent setup.
+draft, its README says so, as [`input-sources/slack/`](../input-sources/slack/README.md) and
+[`input-sources/jira/`](../input-sources/jira/README.md) do, and it comes from your own agent setup.
 
 ## How events get in
 
@@ -51,7 +52,7 @@ ways to get there.
   [setup.md](setup.md#intake-endpoint) has the signature format.
 - **Something must hold a connection or poll** (chat over a socket, a mailbox). Write a small
   bridge that runs on the same machine and POSTs JSON to the task's local URL.
-  [`sources/slack/bridge/`](../sources/slack/bridge/) is a complete one: it filters, dedupes,
+  [`input-sources/slack/bridge/`](../input-sources/slack/bridge/) is a complete one: it filters, dedupes,
   batches, survives restarts, and reports its own health. Its batching and delivery code
   (`lib/batch.mjs`, `lib/delivered.mjs`) is a good place to start from.
 
@@ -93,8 +94,8 @@ Teams does not ship here. This is the path, not a tested module.
 1. **Copy the template** to a folder of your own:
 
    ```bash
-   mkdir -p ~/.config/qitt/sources
-   cp -R sources/_template ~/.config/qitt/sources/teams
+   mkdir -p ~/.config/qitt/input-sources
+   cp -R input-sources/_template ~/.config/qitt/input-sources/teams
    ```
 
 2. **Decide how events get in.** If something on your side can call a webhook when a message
@@ -110,7 +111,7 @@ Teams does not ship here. This is the path, not a tested module.
 6. **Enable it and reinstall:**
 
    ```bash
-   printf 'slack\njira\nteams\n' >| ~/.config/qitt/sources.txt
+   printf 'slack\njira\nteams\n' >| ~/.config/qitt/input-sources.txt
    bin/install-agents
    ```
 

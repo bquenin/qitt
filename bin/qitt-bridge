@@ -3,10 +3,11 @@
 #   qitt-bridge          start if not running; say what happened
 #   qitt-bridge ensure   same, silent, always exits 0 (for ~/.profile)
 #   qitt-bridge stop     stop it
+# Starting also replaces a bridge that was started before its folder moved.
 set -u
 
 repo=$(cd "$(dirname "$(readlink -f "$0")")/.." && pwd)
-script=$repo/sources/slack/bridge/slack-bridge.mjs
+script=$repo/input-sources/slack/bridge/slack-bridge.mjs
 lock=$HOME/.local/state/qitt/slack-bridge.lock
 pidfile=$HOME/.local/state/qitt/slack-bridge.supervisor.pid
 log=$HOME/.local/state/qitt/logs/slack-bridge.log
@@ -41,7 +42,25 @@ if running; then
   exit 0
 fi
 
-[[ -d $repo/sources/slack/bridge/node_modules ]] || fail "dependencies missing; run: npm ci --prefix $repo/sources/slack/bridge"
+[[ -d $repo/input-sources/slack/bridge/node_modules ]] || fail "dependencies missing; run: npm ci --prefix $repo/input-sources/slack/bridge"
+
+# A supervisor started before the bridge's folder moved (an update that renamed it) keeps the
+# lock and restarts a script that is gone, so nothing could start here. Stop it, and the bridge it
+# may still be running from the old files. Only once the new one can start: see the check above.
+pid=$(cat "$pidfile" 2>/dev/null || true)
+if [[ -n $pid && -r /proc/$pid/cmdline ]]; then
+  cmdline=$(tr '\0' ' ' <"/proc/$pid/cmdline" 2>/dev/null || true)
+  if [[ $cmdline == *"supervisor $pidfile "* && $cmdline != *"supervisor $pidfile $script "* ]]; then
+    old=$(tr '\0' '\n' <"/proc/$pid/cmdline" 2>/dev/null | tail -n 1)
+    kill "$pid" 2>/dev/null
+    [[ -n $old ]] && pkill -u "$(id -u)" -f "node $old"
+    for _ in 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20; do
+      [[ -d /proc/$pid ]] || break
+      sleep 0.25
+    done
+    say "stopped the bridge started from $old"
+  fi
+fi
 
 # flock keeps two logins from starting two bridges; the lock dies with the supervisor. The
 # supervisor restarts the bridge 15 s after any exit, so a crash does not wait for the next login.

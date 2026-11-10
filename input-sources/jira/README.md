@@ -1,4 +1,4 @@
-# JIRA source
+# JIRA input source
 
 Issue events (assignments, comments, mentions) and a weekday sweep for the kinds of ticket a
 playbook handles.

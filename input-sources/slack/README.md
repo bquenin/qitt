@@ -1,4 +1,4 @@
-# Slack source
+# Slack input source
 
 Slack messages that are asks for the owner: DMs and group DMs, mentions of the owner or the
 owner's user groups, replies in threads the owner is part of, messages saved for later, and every

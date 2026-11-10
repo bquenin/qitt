@@ -1,8 +1,8 @@
-# Source template
+# Input source template
 
-A starting point for a source of your own. Copy this folder to `~/.config/qitt/sources/<name>/`
-(or to `sources/<name>/` here if you mean to contribute it), fill in each file, and follow
-[docs/sources.md](../../docs/sources.md).
+A starting point for an input source of your own. Copy this folder to
+`~/.config/qitt/input-sources/<name>/` (or to `input-sources/<name>/` here if you mean to
+contribute it), fill in each file, and follow [docs/input-sources.md](../../docs/input-sources.md).
 
 | File | What to write |
 | --- | --- |
