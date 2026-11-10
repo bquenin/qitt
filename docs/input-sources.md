@@ -94,7 +94,7 @@ Teams does not ship here. This is the path, not a tested module.
 1. **Copy the template** to a folder of your own:
 
    ```bash
-   mkdir -p ~/.config/qitt/sources
+   mkdir -p ~/.config/qitt/input-sources
    cp -R input-sources/_template ~/.config/qitt/input-sources/teams
    ```
 

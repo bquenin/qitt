@@ -77,10 +77,12 @@ and the relay's subscription.
 
 ## Slack bridge
 
-`bin/qitt-bridge` keeps `input-sources/slack/bridge/slack-bridge.mjs` running under a restart loop;
-`~/.profile` calls `qitt-bridge ensure`. It reads `~/.config/qitt/bridge.json` and the two Slack
-tokens in `~/.config/qitt/secrets/`, and posts batches to T3 on localhost (not through the
-filter). It also polls the owner's saved-for-later items (needs `search:read` on the user token)
+`bin/qitt-bridge` keeps `input-sources/slack/bridge/slack-bridge.mjs` running under a restart
+loop; `~/.profile` calls `qitt-bridge ensure`. After an update that moves the bridge's folder,
+run `bin/qitt-bridge` (after `npm ci` in the new folder): it stops the bridge started from the
+old path and starts the new one. The bridge reads `~/.config/qitt/bridge.json` and the two
+Slack tokens in `~/.config/qitt/secrets/`, and posts batches to T3 on localhost (not through
+the filter). It also polls the owner's saved-for-later items (needs `search:read` on the user token)
 and sends new saves and removals as events in the same batches. Details in
 [input-sources/slack/bridge/README.md](../input-sources/slack/bridge/README.md).
 
