@@ -79,7 +79,6 @@ AGENTS.md               the core charter
                         + ~/.config/qitt/context.md, under "Local context"
 CLAUDE.md               an import of AGENTS.md, under a comment that says why
 .claude/settings.json   the agent's settings + every enabled source's deny.txt
-.claude/skills/         skills/ + each enabled source's skills/
 ```
 
 So adding or removing a source never edits the core: it changes which sections the installer
@@ -88,9 +87,12 @@ puts under **Sources**, and which tools it denies.
 `AGENTS.md` is the instruction file coding agents read, whichever provider the T3 thread runs on,
 and it imports nothing. `CLAUDE.md` only points Claude Code at it ([setup.md](setup.md#project-roots)
 says why). `.claude/` is read by Claude Code only, and T3 Code has no setting of its own for
-denying a tool. To run the threads on another agent, deny the same tools and install the
-skills in that agent's own configuration: until then, the first rule rests on the charter alone
-there. qitt has run on Claude only so far.
+denying a tool. To run the threads on another agent, deny the same tools in that agent's own
+configuration: until then, the first rule rests on the charter alone there. qitt has run on
+Claude only so far.
+
+qitt installs no skill and no MCP server. The agents use the ones already set up on the machine,
+and the local context names the ones that matter.
 
 The charters, the source sections and the local context are written in the owner's voice ("I",
 "me"), because they are the owner's instructions to the agents. The rest of the documentation is

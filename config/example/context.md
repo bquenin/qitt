@@ -87,6 +87,7 @@ sign-in.
 
 - Evidence sources: <skills and read-only tools workers should use, e.g. a logs or metrics
   skill, a cluster skill, a past-session search tool>
+- Documents: <the skill workers read documents with, e.g. a Google Docs skill; or none>
 - Dashboards: <the dashboard catalog skill or links to start from for metrics, adoption, or cost
   questions; or none>
 - Voice: <where my writing rules live, e.g. "a section of my global agent instructions"; or none>

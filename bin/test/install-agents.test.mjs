@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -123,11 +123,10 @@ describe("install-agents sources", () => {
   it("reads sources.txt and installs a source of my own from ~/.config/qitt/sources/", () => {
     const config = join(tmp, "own-home", ".config", "qitt");
     const source = join(config, "sources", "teams");
-    mkdirSync(join(source, "skills", "teams"), { recursive: true });
+    mkdirSync(source, { recursive: true });
     writeFileSync(join(config, "sources.txt"), "# mine\njira\nteams  # chat\n");
     writeFileSync(join(source, "qitt.md"), "### Teams\n\nTeams rules.\n");
     writeFileSync(join(source, "deny.txt"), "# never send\nmcp__teams__send_message\n");
-    writeFileSync(join(source, "skills", "teams", "SKILL.md"), "teams skill\n");
     const { dest, status, stderr } = install("own");
     assert.equal(status, 0, stderr);
     assert.match(charter(dest, "qitt"), /^### JIRA$[\s\S]*^### Teams\n\nTeams rules\.\n\n## Local context$/m);
@@ -135,20 +134,19 @@ describe("install-agents sources", () => {
     // No worker.md in the source: the worker charter gets nothing from it, the deny list still applies.
     assert.doesNotMatch(charter(dest, "worker"), /Teams/);
     assert.deepEqual(deny(dest, "worker"), ["mcp__teams__send_message"]);
-    for (const skill of ["teams", "google-docs"]) {
-      assert.ok(existsSync(join(dest, "qitt", ".claude", "skills", skill, "SKILL.md")), skill);
-    }
   });
 
-  it("fails before writing anything when a source's skill has the name of another skill", () => {
-    const source = join(tmp, "clash-home", ".config", "qitt", "sources", "teams");
-    mkdirSync(join(source, "skills", "google-docs"), { recursive: true });
-    writeFileSync(join(source, "qitt.md"), "### Teams\n");
-    writeFileSync(join(source, "skills", "google-docs", "SKILL.md"), "mine\n");
-    const { dest, status, stderr } = install("clash", { QITT_SOURCES: "teams" });
-    assert.equal(status, 1);
-    assert.match(stderr, /skill 'google-docs' is in both .*\/skills and .*\/sources\/teams\/skills/);
-    assert.equal(existsSync(dest), false);
+  it("installs no skills, and removes the ones an earlier version installed", () => {
+    const dest = join(tmp, "skills");
+    for (const agent of ["qitt", "worker"]) {
+      mkdirSync(join(dest, agent, ".claude", "skills", "google-docs"), { recursive: true });
+      writeFileSync(join(dest, agent, ".claude", "skills", "google-docs", "SKILL.md"), "old\n");
+    }
+    const { status, stderr } = install("skills");
+    assert.equal(status, 0, stderr);
+    for (const agent of ["qitt", "worker"]) {
+      assert.deepEqual(readdirSync(join(dest, agent, ".claude")), ["settings.json"]);
+    }
   });
 
   it("writes that no source is installed when the list is empty", () => {

@@ -5,10 +5,10 @@
 #
 # A source is a folder: sources/<name>/ in this repo, or ~/.config/qitt/sources/<name>/, which wins
 # over a repo source of the same name. Its qitt.md and worker.md replace the
-# "<!-- qitt:sources -->" line of the matching charter, its deny.txt adds to both agents' deny
-# lists, and its skills/ are installed next to the shared ones. The enabled sources come from
-# QITT_SOURCES (names separated by spaces or commas), else ~/.config/qitt/sources.txt (one name
-# per line, # for comments), else slack and jira. See docs/sources.md.
+# "<!-- qitt:sources -->" line of the matching charter, and its deny.txt adds to both agents' deny
+# lists. The enabled sources come from QITT_SOURCES (names separated by spaces or commas), else
+# ~/.config/qitt/sources.txt (one name per line, # for comments), else slack and jira. See
+# docs/sources.md.
 #
 # Each root gets one AGENTS.md, the instruction file coding agents read: the charter, with the
 # sources' sections and the owner's local context (~/.config/qitt/context.md, QITT_CONTEXT
@@ -21,9 +21,12 @@
 # and it then also loads every AGENTS.md above the root. With its own CLAUDE.md the root is read
 # the same way wherever it is.
 #
-# The deny lists and the skills go under .claude/, which Claude Code reads. The Slack source
-# denies the Slack MCP server's send tools by name (mcp__<server>__...). Set
-# QITT_SLACK_MCP_SERVER if your Slack MCP server is not named slack-cli.
+# The deny lists go under .claude/, which Claude Code reads. The Slack source denies the Slack
+# MCP server's send tools by name (mcp__<server>__...). Set QITT_SLACK_MCP_SERVER if your Slack
+# MCP server is not named slack-cli.
+#
+# No skill or MCP server is installed: the agents use the ones their own setup has, and the local
+# context names them.
 set -euo pipefail
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
@@ -71,29 +74,6 @@ for name in ${wanted[@]+"${wanted[@]}"}; do
   fi
   names+=("$name")
   dirs+=("$dir")
-done
-
-# Every skills/ folder to install: the shared one, then each source's. Two of them must not hold
-# a skill of the same name: copying both would mix their files in one folder. Checked here,
-# before anything is written.
-skill_dirs=()
-skill_names=()
-skill_owners=()
-for skills in "$repo/skills" ${dirs[@]+"${dirs[@]/%//skills}"}; do
-  if [[ ! -d $skills ]]; then continue; fi
-  for entry in "$skills"/*; do
-    if [[ ! -e $entry ]]; then continue; fi
-    skill=${entry##*/}
-    for i in ${skill_names[@]+"${!skill_names[@]}"}; do
-      if [[ ${skill_names[$i]} == "$skill" ]]; then
-        echo "skill '$skill' is in both ${skill_owners[$i]} and $skills; rename one of them" >&2
-        exit 1
-      fi
-    done
-    skill_names+=("$skill")
-    skill_owners+=("$skills")
-  done
-  skill_dirs+=("$skills")
 done
 
 # A context file that is there but cannot be read stops the install here, before anything is
@@ -196,13 +176,9 @@ SHIM
   chmod 0644 "$dst/.claude/settings.json.tmp"
   mv -f "$dst/.claude/settings.json.tmp" "$dst/.claude/settings.json"
 
-  # Shared skills (skills/<name>/) and each source's own go into both roots; replace so
-  # removed skills disappear.
+  # Skills that earlier versions installed here. qitt ships none: the agents use the ones their
+  # own setup has.
   rm -rf "$dst/.claude/skills"
-  for skills in ${skill_dirs[@]+"${skill_dirs[@]}"}; do
-    mkdir -p "$dst/.claude/skills"
-    cp -R "$skills/." "$dst/.claude/skills/"
-  done
   echo "installed $dst"
 done
 

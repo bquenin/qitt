@@ -61,8 +61,8 @@ Report as usual; when your header has `source-key: none`, use the thread title i
   with curl on a temporary copy (`-b copy -c copy -L`), never print cookie values, and delete the
   copy when done. Single-page apps load content from an API; find that call rather than parsing
   the shell HTML.
-- Documents often start as Google Docs: look for the source doc with the `google-docs` skill
-  before giving up on a page.
+- A page is often a copy of a document kept elsewhere (a Google Doc, for example): look for the
+  source document, with the skill local context names for documents, before giving up on a page.
 - If neither works, report `blocked` and say what you need (an export, a link to the source). If
   local context names a peer environment for work that needs my laptop, qitt can rerun the work
   there, so name the exact pages you could not open.

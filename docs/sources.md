@@ -13,7 +13,6 @@ them. [architecture.md](architecture.md) shows where sources sit in the whole.
 | `worker.md` | If workers need something specific | The workers' charter section: how to read an item in full, how a reply goes out, how to name places. |
 | `intake.md` | If events come by webhook | The prompt of the webhook task that delivers this source's events to the qitt thread. |
 | `deny.txt` | If the agents have a tool that sends there | Tool names to deny for both agents, one per line, `#` for comments. The installer writes them to Claude Code's settings. This is what keeps "it never sends anything for its owner" true for the source. |
-| `skills/` | Optional | Skills installed for both agents, next to the shared ones in `skills/`. Each skill needs a name no other enabled source and no shared skill uses: the installer stops on a clash. |
 | Anything else | Optional | A bridge, the prompt of a scheduled sweep, a README. The installer ignores them. |
 
 [`sources/_template/`](../sources/_template/) has a skeleton of each file.
@@ -33,8 +32,12 @@ So a source of your own, or your own version of one that ships, needs no fork, a
 details stay out of the repo.
 
 For each agent, the installer puts every enabled source's section under the **Sources** heading
-of the charter, in the order listed, merges every `deny.txt` into the deny list, and copies
-`skills/`. Re-run it after any change to a source, as you do after editing `context.md`.
+of the charter, in the order listed, and merges every `deny.txt` into the deny list. Re-run it
+after any change to a source, as you do after editing `context.md`.
+
+A source installs no skill and no MCP server. If its agents need one to read the source or save a
+draft, its README says so, as [`sources/slack/`](../sources/slack/README.md) and
+[`sources/jira/`](../sources/jira/README.md) do, and it comes from your own agent setup.
 
 ## How events get in
 
