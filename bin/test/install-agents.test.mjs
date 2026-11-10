@@ -91,7 +91,7 @@ describe("install-agents local context", () => {
   });
 });
 
-describe("install-agents sources", () => {
+describe("install-agents input sources", () => {
   const charter = (dest, agent) => readFileSync(join(dest, agent, "AGENTS.md"), "utf8");
   const settings = (dest, agent) => JSON.parse(readFileSync(join(dest, agent, ".claude", "settings.json"), "utf8"));
   const deny = (dest, agent) => settings(dest, agent).permissions.deny;
@@ -109,22 +109,22 @@ describe("install-agents sources", () => {
     assert.equal(settings(dest, "qitt").autoCompactWindow, 150000);
   });
 
-  it("installs only the sources QITT_SOURCES names, and renames the Slack MCP server", () => {
-    const jira = install("jira-only", { QITT_SOURCES: "jira" });
+  it("installs only the sources QITT_INPUT_SOURCES names, and renames the Slack MCP server", () => {
+    const jira = install("jira-only", { QITT_INPUT_SOURCES: "jira" });
     assert.equal(jira.status, 0, jira.stderr);
     assert.doesNotMatch(charter(jira.dest, "qitt"), /^### Slack$/m);
     assert.deepEqual(deny(jira.dest, "worker"), []);
-    const renamed = install("renamed", { QITT_SOURCES: "slack,slack", QITT_SLACK_MCP_SERVER: "my-slack" });
+    const renamed = install("renamed", { QITT_INPUT_SOURCES: "slack,slack", QITT_SLACK_MCP_SERVER: "my-slack" });
     assert.equal(renamed.status, 0, renamed.stderr);
     assert.equal(charter(renamed.dest, "qitt").match(/^### Slack$/gm).length, 1);
     assert.deepEqual(deny(renamed.dest, "qitt"), slackDeny("my-slack"));
   });
 
-  it("reads sources.txt and installs a source of my own from ~/.config/qitt/sources/", () => {
+  it("reads input-sources.txt and installs a source of my own from ~/.config/qitt/input-sources/", () => {
     const config = join(tmp, "own-home", ".config", "qitt");
-    const source = join(config, "sources", "teams");
+    const source = join(config, "input-sources", "teams");
     mkdirSync(source, { recursive: true });
-    writeFileSync(join(config, "sources.txt"), "# mine\njira\nteams  # chat\n");
+    writeFileSync(join(config, "input-sources.txt"), "# mine\njira\nteams  # chat\n");
     writeFileSync(join(source, "qitt.md"), "### Teams\n\nTeams rules.\n");
     writeFileSync(join(source, "deny.txt"), "# never send\nmcp__teams__send_message\n");
     const { dest, status, stderr } = install("own");
@@ -150,19 +150,19 @@ describe("install-agents sources", () => {
   });
 
   it("writes that no source is installed when the list is empty", () => {
-    const { dest, status, stderr } = install("none", { QITT_SOURCES: "" });
+    const { dest, status, stderr } = install("none", { QITT_INPUT_SOURCES: "" });
     assert.equal(status, 0, stderr);
     assert.match(charter(dest, "qitt"), /^No source is installed\.$/m);
     assert.deepEqual(deny(dest, "qitt"), []);
   });
 
   it("fails on a bad name, a source it cannot find, and a source without qitt.md", () => {
-    assert.match(install("bad-name", { QITT_SOURCES: "../etc" }).stderr, /source name '\.\.\/etc' must be/);
-    const unknown = install("unknown", { QITT_SOURCES: "teams" });
+    assert.match(install("bad-name", { QITT_INPUT_SOURCES: "../etc" }).stderr, /source name '\.\.\/etc' must be/);
+    const unknown = install("unknown", { QITT_INPUT_SOURCES: "teams" });
     assert.equal(unknown.status, 1);
-    assert.match(unknown.stderr, /source 'teams' is in neither/);
-    mkdirSync(join(tmp, "empty-home", ".config", "qitt", "sources", "teams"), { recursive: true });
-    const empty = install("empty", { QITT_SOURCES: "teams" });
+    assert.match(unknown.stderr, /input source 'teams' is in neither/);
+    mkdirSync(join(tmp, "empty-home", ".config", "qitt", "input-sources", "teams"), { recursive: true });
+    const empty = install("empty", { QITT_INPUT_SOURCES: "teams" });
     assert.equal(empty.status, 1);
     assert.match(empty.stderr, /source 'teams' has no qitt\.md/);
   });

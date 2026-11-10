@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # Install the qitt and worker T3 project roots into ~/.local/state/qitt/projects/
-# (QITT_PROJECTS_DIR overrides), assembled from agents/ and the enabled sources. Copies, so
+# (QITT_PROJECTS_DIR overrides), assembled from agents/ and the enabled input sources. Copies, so
 # editing the repo does not change new threads until you reinstall.
 #
-# A source is a folder: sources/<name>/ in this repo, or ~/.config/qitt/sources/<name>/, which wins
-# over a repo source of the same name. Its qitt.md and worker.md replace the
-# "<!-- qitt:sources -->" line of the matching charter, and its deny.txt adds to both agents' deny
-# lists. The enabled sources come from QITT_SOURCES (names separated by spaces or commas), else
-# ~/.config/qitt/sources.txt (one name per line, # for comments), else slack and jira. See
-# docs/sources.md.
+# An input source is a folder: input-sources/<name>/ in this repo, or
+# ~/.config/qitt/input-sources/<name>/, which wins over a repo source of the same name. Its qitt.md
+# and worker.md replace the "<!-- qitt:sources -->" line of the matching charter, and its deny.txt
+# adds to both agents' deny lists. The enabled sources come from QITT_INPUT_SOURCES (names
+# separated by spaces or commas), else ~/.config/qitt/input-sources.txt (one name per line, # for
+# comments), else slack and jira. See docs/input-sources.md.
 #
 # Each root gets one AGENTS.md, the instruction file coding agents read: the charter, with the
 # sources' sections and the owner's local context (~/.config/qitt/context.md, QITT_CONTEXT
@@ -31,7 +31,7 @@ set -euo pipefail
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
 dest=${QITT_PROJECTS_DIR:-$HOME/.local/state/qitt/projects}
-own_sources=$HOME/.config/qitt/sources
+own_sources=$HOME/.config/qitt/input-sources
 slack_mcp=${QITT_SLACK_MCP_SERVER:-slack-cli}
 context=${QITT_CONTEXT:-$HOME/.config/qitt/context.md}
 if [[ -n ${QITT_CONTEXT:-} && ! -f $QITT_CONTEXT ]]; then
@@ -43,10 +43,10 @@ if [[ ! $slack_mcp =~ ^[A-Za-z0-9_-]+$ ]]; then
   exit 1
 fi
 
-if [[ -n ${QITT_SOURCES+set} ]]; then
-  enabled=$QITT_SOURCES
-elif [[ -f $HOME/.config/qitt/sources.txt ]]; then
-  enabled=$(sed 's/#.*//' "$HOME/.config/qitt/sources.txt")
+if [[ -n ${QITT_INPUT_SOURCES+set} ]]; then
+  enabled=$QITT_INPUT_SOURCES
+elif [[ -f $HOME/.config/qitt/input-sources.txt ]]; then
+  enabled=$(sed 's/#.*//' "$HOME/.config/qitt/input-sources.txt")
 else
   enabled="slack jira"
 fi
@@ -62,10 +62,10 @@ for name in ${wanted[@]+"${wanted[@]}"}; do
   case " ${names[*]-} " in *" $name "*) continue ;; esac
   if [[ -d $own_sources/$name ]]; then
     dir=$own_sources/$name
-  elif [[ -d $repo/sources/$name ]]; then
-    dir=$repo/sources/$name
+  elif [[ -d $repo/input-sources/$name ]]; then
+    dir=$repo/input-sources/$name
   else
-    echo "source '$name' is in neither $own_sources nor $repo/sources" >&2
+    echo "input source '$name' is in neither $own_sources nor $repo/input-sources" >&2
     exit 1
   fi
   if [[ ! -f $dir/qitt.md ]]; then
@@ -182,7 +182,7 @@ SHIM
   echo "installed $dst"
 done
 
-echo "sources: ${names[*]-none}"
+echo "input sources: ${names[*]-none}"
 if [[ -f $context ]]; then
   echo "local context written in from $context; re-run after editing it"
 else

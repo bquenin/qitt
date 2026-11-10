@@ -3,9 +3,9 @@
 <rect x="0" y="0" width="1530" height="912" fill="#ffffff"/>
 <text x="30" y="42" font-family="Helvetica, Arial, sans-serif" font-size="24" font-weight="bold" fill="#27272a" text-anchor="start">qitt: a proactive chief of staff inside T3 Code</text>
 <text x="30" y="68" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#52525b" text-anchor="start">One pinned thread reads the requests that reach its owner, decides what each one needs, and hands the research to worker threads, so a brief and a proposed</text>
-<text x="30" y="88" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#52525b" text-anchor="start">reply are ready ahead of time. It never sends anything for its owner. Every source of requests is a module, and the core does not change when one is added.</text>
+<text x="30" y="88" font-family="Helvetica, Arial, sans-serif" font-size="14" font-weight="normal" fill="#52525b" text-anchor="start">reply are ready ahead of time. It never sends anything for its owner. Every input source is a module, and the core does not change when one is added.</text>
 <rect x="30" y="110" width="350" height="662" rx="16" fill="#edf7ef" stroke="#2f855a" stroke-width="2"/>
-<text x="48" y="138" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="bold" fill="#22543d" text-anchor="start">Sources: one module each</text>
+<text x="48" y="138" font-family="Helvetica, Arial, sans-serif" font-size="17" font-weight="bold" fill="#22543d" text-anchor="start">Input sources: one module each</text>
 <rect x="50" y="160" width="310" height="150" rx="12" fill="#ffffff" stroke="#2f855a" stroke-width="2"/>
 <text x="66" y="186" font-family="Helvetica, Arial, sans-serif" font-size="15" font-weight="bold" fill="#27272a" text-anchor="start">Slack</text>
 <text x="66" y="208" font-family="Helvetica, Arial, sans-serif" font-size="12.5" font-weight="normal" fill="#27272a" text-anchor="start">slack-bridge holds a Socket Mode</text>
@@ -107,7 +107,7 @@
 <path d="M670,696 L360,696" fill="none" stroke="#27272a" stroke-width="1.6" marker-end="url(#head)"/>
 <text x="515" y="688" font-family="Helvetica, Arial, sans-serif" font-size="11.5" font-weight="normal" fill="#52525b" text-anchor="middle">read the source, save drafts</text>
 <rect x="30" y="802" width="1470" height="84" rx="12" fill="#ffffff" stroke="#71717a" stroke-width="1.5"/>
-<text x="48" y="834" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#27272a" text-anchor="start">A source module is a folder.</text>
-<text x="236" y="834" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="normal" fill="#27272a" text-anchor="start">sources/&lt;name&gt;/ holds qitt.md and worker.md (charter sections), intake.md (the webhook task's prompt), deny.txt (send tools to block) and, if it needs one, a bridge.</text>
-<text x="48" y="860" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="normal" fill="#27272a" text-anchor="start">List it in ~/.config/qitt/sources.txt, run bin/install-agents, and have the qitt thread create its webhook task. A module of your own can also live in ~/.config/qitt/sources/, outside the repo.</text>
+<text x="48" y="834" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="bold" fill="#27272a" text-anchor="start">An input source is a folder.</text>
+<text x="236" y="834" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="normal" fill="#27272a" text-anchor="start">input-sources/&lt;name&gt;/ holds qitt.md and worker.md (charter sections), intake.md (the webhook task's prompt), deny.txt (send tools to block) and, if it needs one, a bridge.</text>
+<text x="48" y="860" font-family="Helvetica, Arial, sans-serif" font-size="13.5" font-weight="normal" fill="#27272a" text-anchor="start">List it in ~/.config/qitt/input-sources.txt, run bin/install-agents, and have the qitt thread create its webhook task. A module of your own can also live in ~/.config/qitt/input-sources/, outside the repo.</text>
 </svg>
