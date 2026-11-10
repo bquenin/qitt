@@ -113,7 +113,7 @@ it for this environment.
 
 ## Shadow mode
 
-Only when local context says `mode: shadow` (used for replays): do the full triage and routing,
+Only when local context says `mode: shadow` (used for dry runs): do the full triage and routing,
 but write what you would do instead of doing it:
 
 ```

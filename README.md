@@ -36,15 +36,13 @@ them. Planned, not in this repo yet: an interval supervision pass and a JQL back
 | `bin/` | `install-agents` assembles each agent's T3 project root from its charter, the enabled sources and your local `context.md` (re-run it after editing any of them); `qitt-filter` and `qitt-bridge` keep the filter and the Slack bridge running; `qitt-mute` mutes Slack conversations for the bridge. |
 | `docs/` | `architecture.md`: the parts and how a request travels. `input-sources.md`: what a source is made of and how to add one. `setup.md`: how the thread, intake tasks, and endpoint are wired, and every config key. |
 | `filter/` | Path filter that exposes only the T3 webhook routes, with optional HMAC signature checks (`bin/qitt-filter` runs it). Shared by every source that calls a webhook. |
-| `replay/` | Export of past events and shadow-mode scoring of qitt's triage. |
 | `config/example/` | Placeholder versions of the local config files. |
 
 ## Dependencies
 
 - A [T3 Code](https://github.com/pingdotgg/t3code) server, with the qitt and worker projects
   registered (see [docs/setup.md](docs/setup.md)).
-- Node.js 22.19 or later for the installer, the bridge and the filter; Python 3.9 or later for
-  `replay/`.
+- Node.js 22.19 or later for the installer, the bridge and the filter.
 - What each source you enable needs:
   - [Slack](input-sources/slack/README.md): a Slack app for the bridge, a Slack MCP server for the
     agents (reading Slack, saving drafts; its send tools are denied), and the `slack` skill.
@@ -56,12 +54,12 @@ them. Planned, not in this repo yet: an interval supervision pass and a JQL back
 ## Local data
 
 The repo holds code and generic templates only. Everything specific to a workplace or a person
-(names, timezone, people, Slack and JIRA IDs, hostnames, tokens, exported history, replay
-results) stays on the machine and is never committed:
+(names, timezone, people, Slack and JIRA IDs, hostnames, tokens) stays on the machine and is
+never committed:
 
 - `~/.config/qitt/` for config and secrets (start from `config/example/`; keys in
   [docs/setup.md](docs/setup.md#configuration)), and for sources of your own
-- `~/.local/state/qitt/` for the installed project roots, exported history, replay runs, and logs
+- `~/.local/state/qitt/` for the installed project roots, the bridge's state, and logs
 
 ## Tests
 
