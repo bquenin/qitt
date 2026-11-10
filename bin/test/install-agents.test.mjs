@@ -1,12 +1,12 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { after, describe, it } from "node:test";
 
-const installer = join(dirname(fileURLToPath(import.meta.url)), "..", "install-profiles");
+const installer = join(dirname(fileURLToPath(import.meta.url)), "..", "install-agents");
 const tmp = mkdtempSync(join(tmpdir(), "qitt-install-"));
 after(() => rmSync(tmp, { recursive: true, force: true }));
 
@@ -20,33 +20,44 @@ function install(name, env = {}) {
   return { dest, ...res };
 }
 
-describe("install-profiles local context", () => {
-  it("copies the context into each profile and keeps the import", () => {
+describe("install-agents local context", () => {
+  it("writes the context into each AGENTS.md, private, with nothing to import", () => {
     const context = join(tmp, "context.md");
-    writeFileSync(context, "# ctx\n\n- First name: Ada\n");
+    writeFileSync(context, "# ctx\n\n- First name: Ada");
     const { dest, status, stderr } = install("present", { QITT_CONTEXT: context });
     assert.equal(status, 0, stderr);
-    for (const profile of ["qitt", "worker"]) {
-      const copy = join(dest, profile, "context.local.md");
-      assert.equal(readFileSync(copy, "utf8"), "# ctx\n\n- First name: Ada\n");
-      assert.equal(statSync(copy).mode & 0o777, 0o600);
-      assert.match(readFileSync(join(dest, profile, "CLAUDE.md"), "utf8"), /^@context\.local\.md$/m);
+    for (const agent of ["qitt", "worker"]) {
+      const file = join(dest, agent, "AGENTS.md");
+      const charter = readFileSync(file, "utf8");
+      assert.ok(charter.endsWith("## Local context\n\n# ctx\n\n- First name: Ada\n"), charter.slice(-80));
+      assert.doesNotMatch(charter, /qitt:context|^@/m);
+      assert.equal(statSync(file).mode & 0o777, 0o600);
+      assert.deepEqual(readdirSync(join(dest, agent)).sort(), [".claude", "AGENTS.md"]);
     }
   });
 
-  it("warns, drops the import, and removes a stale copy when the context is missing", () => {
-    const context = join(tmp, "later.md");
-    writeFileSync(context, "old\n");
-    assert.equal(install("missing", { QITT_CONTEXT: context }).status, 0);
-    rmSync(context);
+  it("warns and leaves the section empty when the context is missing", () => {
     const { dest, status, stderr } = install("missing");
     assert.equal(status, 0, stderr);
     assert.match(stderr, /warning: .*context\.md is missing/);
-    for (const profile of ["qitt", "worker"]) {
-      assert.equal(existsSync(join(dest, profile, "context.local.md")), false);
-      const charter = readFileSync(join(dest, profile, "CLAUDE.md"), "utf8");
-      assert.doesNotMatch(charter, /^@/m);
-      assert.match(charter, /^## Local context$/m);
+    for (const agent of ["qitt", "worker"]) {
+      const charter = readFileSync(join(dest, agent, "AGENTS.md"), "utf8");
+      assert.ok(charter.endsWith("## Local context\n\n"), charter.slice(-80));
+      assert.doesNotMatch(charter, /qitt:context|^@/m);
+    }
+  });
+
+  it("removes the CLAUDE.md and context copy an earlier version installed", () => {
+    const dest = join(tmp, "upgrade");
+    for (const agent of ["qitt", "worker"]) {
+      mkdirSync(join(dest, agent), { recursive: true });
+      writeFileSync(join(dest, agent, "CLAUDE.md"), "old charter\n");
+      writeFileSync(join(dest, agent, "context.local.md"), "old context\n");
+    }
+    const { status, stderr } = install("upgrade");
+    assert.equal(status, 0, stderr);
+    for (const agent of ["qitt", "worker"]) {
+      assert.deepEqual(readdirSync(join(dest, agent)).sort(), [".claude", "AGENTS.md"]);
     }
   });
 
@@ -57,20 +68,20 @@ describe("install-profiles local context", () => {
   });
 });
 
-describe("install-profiles sources", () => {
-  const charter = (dest, profile) => readFileSync(join(dest, profile, "CLAUDE.md"), "utf8");
-  const settings = (dest, profile) => JSON.parse(readFileSync(join(dest, profile, ".claude", "settings.json"), "utf8"));
-  const deny = (dest, profile) => settings(dest, profile).permissions.deny;
+describe("install-agents sources", () => {
+  const charter = (dest, agent) => readFileSync(join(dest, agent, "AGENTS.md"), "utf8");
+  const settings = (dest, agent) => JSON.parse(readFileSync(join(dest, agent, ".claude", "settings.json"), "utf8"));
+  const deny = (dest, agent) => settings(dest, agent).permissions.deny;
   const slackDeny = (server) => [`mcp__${server}__slack_send_message`, `mcp__${server}__slack_schedule_message`];
 
   it("installs slack and jira by default: their sections in each charter, their deny entries", () => {
     const { dest, status, stderr } = install("default");
     assert.equal(status, 0, stderr);
-    for (const profile of ["qitt", "worker"]) {
-      const text = charter(dest, profile);
+    for (const agent of ["qitt", "worker"]) {
+      const text = charter(dest, agent);
       assert.doesNotMatch(text, /qitt:sources/);
       assert.match(text, /^## Sources$[\s\S]*^### Slack$[\s\S]*^### JIRA$[\s\S]*^## Local context$/m);
-      assert.deepEqual(deny(dest, profile), slackDeny("slack-cli"));
+      assert.deepEqual(deny(dest, agent), slackDeny("slack-cli"));
     }
     assert.equal(settings(dest, "qitt").autoCompactWindow, 150000);
   });

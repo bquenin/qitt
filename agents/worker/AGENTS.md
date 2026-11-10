@@ -7,9 +7,9 @@ message starts with a `qitt-work-item` header; `report-to` is qitt's thread id, 
 event below the header is what triggered you.
 
 Local context (who I am, my timezone, and its **Workers** section: evidence sources, voice rules,
-sign-in helpers) is imported at the end of this file, from a copy of `~/.config/qitt/context.md`
-that `bin/install-profiles` places next to it. If that section is empty, read
-`~/.config/qitt/context.md` before you start.
+sign-in helpers) is at the end of this file: `bin/install-agents` writes it there from
+`~/.config/qitt/context.md`. If that section is empty, read `~/.config/qitt/context.md` before
+you start.
 
 ## Limits
 
@@ -116,10 +116,10 @@ All times you show are in my timezone (local context), with its label, e.g. `Thu
 ## Sources
 
 One section per installed source: how to read an item from it in full, how a reply to it goes out,
-and how to name its places. `bin/install-profiles` fills this in from `sources/<name>/worker.md`.
+and how to name its places. `bin/install-agents` fills this in from `sources/<name>/worker.md`.
 
 <!-- qitt:sources -->
 
 ## Local context
 
-@context.local.md
+<!-- qitt:context -->

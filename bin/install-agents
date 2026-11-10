@@ -1,22 +1,23 @@
 #!/usr/bin/env bash
 # Install the qitt and worker T3 project roots into ~/.local/state/qitt/projects/
-# (QITT_PROJECTS_DIR overrides), assembled from profiles/ and the enabled sources. Copies, so
+# (QITT_PROJECTS_DIR overrides), assembled from agents/ and the enabled sources. Copies, so
 # editing the repo does not change new threads until you reinstall.
 #
 # A source is a folder: sources/<name>/ in this repo, or ~/.config/qitt/sources/<name>/, which wins
 # over a repo source of the same name. Its qitt.md and worker.md replace the
-# "<!-- qitt:sources -->" line of the matching charter, its deny.txt adds to both profiles' deny
+# "<!-- qitt:sources -->" line of the matching charter, its deny.txt adds to both agents' deny
 # lists, and its skills/ are installed next to the shared ones. The enabled sources come from
 # QITT_SOURCES (names separated by spaces or commas), else ~/.config/qitt/sources.txt (one name
 # per line, # for comments), else slack and jira. See docs/sources.md.
 #
-# Each charter imports the owner's local context as @context.local.md, a copy of
-# ~/.config/qitt/context.md (QITT_CONTEXT overrides) placed in the profile. Claude Code expands
-# imports only from inside the project without asking, and resolves symlinks before deciding, so
-# this is a copy, not a link: re-run this script after editing context.md. Without a context file
-# the import line is left out and the charters' fallback applies.
+# Each root gets one AGENTS.md, the instruction file coding agents read: the charter, with the
+# sources' sections and the owner's local context (~/.config/qitt/context.md, QITT_CONTEXT
+# overrides) written into it at the "<!-- qitt:context -->" line. Nothing is imported or linked,
+# so re-run this script after editing context.md. Without a context file that section stays
+# empty and the charters' fallback applies.
 #
-# The Slack source denies the Slack MCP server's send tools by name (mcp__<server>__...). Set
+# The deny lists and the skills go under .claude/, which Claude Code reads. The Slack source
+# denies the Slack MCP server's send tools by name (mcp__<server>__...). Set
 # QITT_SLACK_MCP_SERVER if your Slack MCP server is not named slack-cli.
 set -euo pipefail
 
@@ -90,44 +91,56 @@ for skills in "$repo/skills" ${dirs[@]+"${dirs[@]/%//skills}"}; do
   skill_dirs+=("$skills")
 done
 
+context_file=
+if [[ -f $context ]]; then context_file=$context; fi
+
 sections=$(mktemp)
 trap 'rm -f "$sections"' EXIT
 
-for profile in qitt worker; do
-  src=$repo/profiles/$profile
-  dst=$dest/$profile
+for agent in qitt worker; do
+  src=$repo/agents/$agent
+  dst=$dest/$agent
   mkdir -p "$dst/.claude"
 
-  # This profile's section from each enabled source, one blank line apart.
+  # This agent's section from each enabled source, one blank line apart.
   : >|"$sections"
   deny=()
   for dir in ${dirs[@]+"${dirs[@]}"}; do
-    if [[ -f $dir/$profile.md ]]; then
+    if [[ -f $dir/$agent.md ]]; then
       if [[ -s $sections ]]; then echo >>"$sections"; fi
-      cat "$dir/$profile.md" >>"$sections"
+      cat "$dir/$agent.md" >>"$sections"
     fi
     if [[ -f $dir/deny.txt ]]; then deny+=("$dir/deny.txt"); fi
   done
   if [[ ! -s $sections ]]; then echo "No source is installed." >>"$sections"; fi
 
-  if ! awk -v sections="$sections" '
-    $0 == "<!-- qitt:sources -->" { while ((getline line < sections) > 0) print line; found = 1; next }
+  # The charter with both markers filled in. It holds the owner's context, so it is private from
+  # the moment it is created.
+  missing=0
+  (umask 077 && awk -v sections="$sections" -v context="$context_file" '
+    $0 == "<!-- qitt:sources -->" { while ((getline line < sections) > 0) print line; sources = 1; next }
+    $0 == "<!-- qitt:context -->" {
+      if (context != "") while ((getline line < context) > 0) print line
+      local = 1
+      next
+    }
     { print }
-    END { exit !found }' "$src/CLAUDE.md" >|"$dst/CLAUDE.md.tmp"; then
-    echo "$src/CLAUDE.md has no <!-- qitt:sources --> line" >&2
+    END { if (!sources) exit 2; if (!local) exit 3 }' "$src/AGENTS.md" >|"$dst/AGENTS.md.tmp") || missing=$?
+  if [[ $missing -ne 0 ]]; then
+    rm -f "$dst/AGENTS.md.tmp"
+    case $missing in
+      2) echo "$src/AGENTS.md has no <!-- qitt:sources --> line" >&2 ;;
+      3) echo "$src/AGENTS.md has no <!-- qitt:context --> line" >&2 ;;
+      *) echo "could not assemble $dst/AGENTS.md" >&2 ;;
+    esac
     exit 1
   fi
-  if [[ -f $context ]]; then
-    install -m 0600 "$context" "$dst/context.local.md"
-  else
-    rm -f "$dst/context.local.md"
-    grep -vx '@context.local.md' "$dst/CLAUDE.md.tmp" >|"$dst/CLAUDE.md.tmp2"
-    mv -f "$dst/CLAUDE.md.tmp2" "$dst/CLAUDE.md.tmp"
-  fi
-  chmod 0644 "$dst/CLAUDE.md.tmp"
-  mv -f "$dst/CLAUDE.md.tmp" "$dst/CLAUDE.md"
+  mv -f "$dst/AGENTS.md.tmp" "$dst/AGENTS.md"
+  # Files earlier versions installed. A CLAUDE.md left here would make Claude Code read it
+  # instead of AGENTS.md.
+  rm -f "$dst/CLAUDE.md" "$dst/context.local.md"
 
-  # The profile's own settings, plus every tool the enabled sources deny.
+  # The agent's own settings, plus every tool the enabled sources deny.
   node -e '
     const { readFileSync } = require("node:fs");
     const [base, ...lists] = process.argv.slice(1);
@@ -146,7 +159,7 @@ for profile in qitt worker; do
   chmod 0644 "$dst/.claude/settings.json.tmp"
   mv -f "$dst/.claude/settings.json.tmp" "$dst/.claude/settings.json"
 
-  # Shared skills (skills/<name>/) and each source's own go into every profile; replace so
+  # Shared skills (skills/<name>/) and each source's own go into both roots; replace so
   # removed skills disappear.
   rm -rf "$dst/.claude/skills"
   for skills in ${skill_dirs[@]+"${skill_dirs[@]}"}; do
@@ -158,8 +171,8 @@ done
 
 echo "sources: ${names[*]-none}"
 if [[ -f $context ]]; then
-  echo "local context copied from $context; re-run after editing it"
+  echo "local context written in from $context; re-run after editing it"
 else
-  echo "warning: $context is missing, so the charters import no local context;" \
+  echo "warning: $context is missing, so the charters hold no local context;" \
     "start from config/example/context.md, then re-run" >&2
 fi

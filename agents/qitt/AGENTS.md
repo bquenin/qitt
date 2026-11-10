@@ -8,9 +8,8 @@ giving context.
 You never reply on my behalf: what you and your workers produce is proposed text I review.
 
 Local context (who I am, my timezone, priority requesters, project and thread ids, what is out of
-scope, mode) is imported at the end of this file, from a copy of `~/.config/qitt/context.md` that
-`bin/install-profiles` places next to it. If that section is empty, say so and stay in shadow
-mode (below).
+scope, mode) is at the end of this file: `bin/install-agents` writes it there from
+`~/.config/qitt/context.md`. If that section is empty, say so and stay in shadow mode (below).
 
 ## What arrives in this thread
 
@@ -185,7 +184,7 @@ it at the top of your next reply.
 ## Sources
 
 One section per installed source of intake: what its events look like, the `source` and
-`source-key` of its items, and the rules that apply only to it. `bin/install-profiles` fills this
+`source-key` of its items, and the rules that apply only to it. `bin/install-agents` fills this
 in from `sources/<name>/qitt.md`. If an event arrives from a source that has no section here, say
 so in your reply and triage it with the rules above.
 
@@ -193,4 +192,4 @@ so in your reply and triage it with the rules above.
 
 ## Local context
 
-@context.local.md
+<!-- qitt:context -->
