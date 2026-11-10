@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { spawnSync } from "node:child_process";
-import { existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -59,6 +59,20 @@ describe("install-agents local context", () => {
     for (const agent of ["qitt", "worker"]) {
       assert.deepEqual(readdirSync(join(dest, agent)).sort(), [".claude", "AGENTS.md"]);
     }
+  });
+
+  it("stops, leaving the installed charter alone, when the context cannot be read", () => {
+    const context = join(tmp, "locked.md");
+    writeFileSync(context, "- First name: Ada\n");
+    const first = install("locked", { QITT_CONTEXT: context });
+    assert.equal(first.status, 0, first.stderr);
+    const before = readFileSync(join(first.dest, "qitt", "AGENTS.md"), "utf8");
+    chmodSync(context, 0o000);
+    const { dest, status, stderr } = install("locked", { QITT_CONTEXT: context });
+    chmodSync(context, 0o600);
+    assert.equal(status, 1);
+    assert.match(stderr, /locked\.md cannot be read/);
+    assert.equal(readFileSync(join(dest, "qitt", "AGENTS.md"), "utf8"), before);
   });
 
   it("fails when QITT_CONTEXT names a missing file", () => {

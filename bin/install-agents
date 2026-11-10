@@ -91,8 +91,16 @@ for skills in "$repo/skills" ${dirs[@]+"${dirs[@]/%//skills}"}; do
   skill_dirs+=("$skills")
 done
 
+# A context file that is there but cannot be read stops the install here, before anything is
+# written: installing without it would silently put qitt back in shadow mode.
 context_file=
-if [[ -f $context ]]; then context_file=$context; fi
+if [[ -f $context ]]; then
+  if [[ ! -r $context ]]; then
+    echo "$context cannot be read" >&2
+    exit 1
+  fi
+  context_file=$context
+fi
 
 sections=$(mktemp)
 trap 'rm -f "$sections"' EXIT
@@ -120,17 +128,21 @@ for agent in qitt worker; do
   (umask 077 && awk -v sections="$sections" -v context="$context_file" '
     $0 == "<!-- qitt:sources -->" { while ((getline line < sections) > 0) print line; sources = 1; next }
     $0 == "<!-- qitt:context -->" {
-      if (context != "") while ((getline line < context) > 0) print line
+      if (context != "") {
+        while ((got = (getline line < context)) > 0) print line
+        if (got < 0) { unread = 1; exit }
+      }
       local = 1
       next
     }
     { print }
-    END { if (!sources) exit 2; if (!local) exit 3 }' "$src/AGENTS.md" >|"$dst/AGENTS.md.tmp") || missing=$?
+    END { if (unread) exit 4; if (!sources) exit 2; if (!local) exit 3 }' "$src/AGENTS.md" >|"$dst/AGENTS.md.tmp") || missing=$?
   if [[ $missing -ne 0 ]]; then
     rm -f "$dst/AGENTS.md.tmp"
     case $missing in
       2) echo "$src/AGENTS.md has no <!-- qitt:sources --> line" >&2 ;;
       3) echo "$src/AGENTS.md has no <!-- qitt:context --> line" >&2 ;;
+      4) echo "$context cannot be read" >&2 ;;
       *) echo "could not assemble $dst/AGENTS.md" >&2 ;;
     esac
     exit 1
