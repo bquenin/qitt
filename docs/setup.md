@@ -21,11 +21,15 @@ see the new version. `QITT_CONTEXT=<path>` installs another file (for tests). If
 missing, the installer warns and leaves the section empty, and the charters fall back: workers
 read `~/.config/qitt/context.md` themselves, and qitt stays in shadow mode.
 
-Claude Code reads `AGENTS.md` from version 2.1.277, when no `CLAUDE.md` sits beside or above it
-(the installer removes the one earlier versions of qitt installed). It also reads an `AGENTS.md`
-in any directory above the roots, so one in the home directory is loaded into every qitt and
-worker thread. The deny lists and the skills are under `.claude/`, which only Claude Code reads:
-see [architecture.md](architecture.md#what-the-installer-assembles) before running the threads on
+Next to it the installer writes a `CLAUDE.md` that only imports it (`@AGENTS.md`). Claude Code
+reads an `AGENTS.md` by itself only when it finds no `CLAUDE.md` in the root or above it, and it
+then also loads every `AGENTS.md` above the root. So without that file, an `AGENTS.md` in the
+home directory would be added to every thread, and a `CLAUDE.md` above the root (which is what
+`~/.claude/CLAUDE.md` is when Claude Code runs with another config directory) would keep the
+charter from loading at all. Other agents ignore the file.
+
+The deny lists and the skills are under `.claude/`, which only Claude Code reads: see
+[architecture.md](architecture.md#what-the-installer-assembles) before running the threads on
 another agent.
 
 ## The qitt thread

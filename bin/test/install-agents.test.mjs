@@ -20,6 +20,13 @@ function install(name, env = {}) {
   return { dest, ...res };
 }
 
+// What Claude Code is left with in the installed CLAUDE.md once its comment is stripped.
+const shimLines = (dest, agent) =>
+  readFileSync(join(dest, agent, "CLAUDE.md"), "utf8")
+    .replace(/<!--[\s\S]*?-->/g, "")
+    .split("\n")
+    .filter((line) => line.trim() !== "");
+
 describe("install-agents local context", () => {
   it("writes the context into each AGENTS.md, private, with nothing to import", () => {
     const context = join(tmp, "context.md");
@@ -32,7 +39,8 @@ describe("install-agents local context", () => {
       assert.ok(charter.endsWith("## Local context\n\n# ctx\n\n- First name: Ada\n"), charter.slice(-80));
       assert.doesNotMatch(charter, /qitt:context|^@/m);
       assert.equal(statSync(file).mode & 0o777, 0o600);
-      assert.deepEqual(readdirSync(join(dest, agent)).sort(), [".claude", "AGENTS.md"]);
+      assert.deepEqual(readdirSync(join(dest, agent)).sort(), [".claude", "AGENTS.md", "CLAUDE.md"]);
+      assert.deepEqual(shimLines(dest, agent), ["@AGENTS.md"]);
     }
   });
 
@@ -47,7 +55,7 @@ describe("install-agents local context", () => {
     }
   });
 
-  it("removes the CLAUDE.md and context copy an earlier version installed", () => {
+  it("replaces the CLAUDE.md and removes the context copy an earlier version installed", () => {
     const dest = join(tmp, "upgrade");
     for (const agent of ["qitt", "worker"]) {
       mkdirSync(join(dest, agent), { recursive: true });
@@ -57,7 +65,8 @@ describe("install-agents local context", () => {
     const { status, stderr } = install("upgrade");
     assert.equal(status, 0, stderr);
     for (const agent of ["qitt", "worker"]) {
-      assert.deepEqual(readdirSync(join(dest, agent)).sort(), [".claude", "AGENTS.md"]);
+      assert.deepEqual(readdirSync(join(dest, agent)).sort(), [".claude", "AGENTS.md", "CLAUDE.md"]);
+      assert.deepEqual(shimLines(dest, agent), ["@AGENTS.md"]);
     }
   });
 

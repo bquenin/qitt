@@ -16,6 +16,11 @@
 # so re-run this script after editing context.md. Without a context file that section stays
 # empty and the charters' fallback applies.
 #
+# Next to it goes a CLAUDE.md that only imports it ("@AGENTS.md"), under a comment that says why.
+# Claude Code reads AGENTS.md by itself only when it finds no CLAUDE.md in the root or above it,
+# and it then also loads every AGENTS.md above the root. With its own CLAUDE.md the root is read
+# the same way wherever it is.
+#
 # The deny lists and the skills go under .claude/, which Claude Code reads. The Slack source
 # denies the Slack MCP server's send tools by name (mcp__<server>__...). Set
 # QITT_SLACK_MCP_SERVER if your Slack MCP server is not named slack-cli.
@@ -148,9 +153,29 @@ for agent in qitt worker; do
     exit 1
   fi
   mv -f "$dst/AGENTS.md.tmp" "$dst/AGENTS.md"
-  # Files earlier versions installed. A CLAUDE.md left here would make Claude Code read it
-  # instead of AGENTS.md.
-  rm -f "$dst/CLAUDE.md" "$dst/context.local.md"
+  # Claude Code's way in: its own file name, pointing at the charter. This also replaces the
+  # full CLAUDE.md an earlier version installed.
+  cat >|"$dst/CLAUDE.md.tmp" <<'SHIM'
+<!--
+Written by qitt's bin/install-agents. Do not edit: the charter is the AGENTS.md next to this file.
+
+This file only points Claude Code at it, with the import below. Claude Code reads an AGENTS.md
+by itself only when it finds no CLAUDE.md in this folder or above it, and it then also loads
+every AGENTS.md above this folder. So without this file:
+
+- an AGENTS.md in the home directory would be added to every thread, on top of the same
+  instructions Claude Code already loads as its global file;
+- a CLAUDE.md above this folder would keep the charter from loading at all. That is what
+  ~/.claude/CLAUDE.md is when Claude Code runs with another config directory.
+
+Other agents ignore this file and read AGENTS.md directly.
+-->
+
+@AGENTS.md
+SHIM
+  chmod 0644 "$dst/CLAUDE.md.tmp"
+  mv -f "$dst/CLAUDE.md.tmp" "$dst/CLAUDE.md"
+  rm -f "$dst/context.local.md"
 
   # The agent's own settings, plus every tool the enabled sources deny.
   node -e '
