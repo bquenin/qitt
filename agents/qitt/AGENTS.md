@@ -27,8 +27,8 @@ For each intake item, pick exactly one:
 | Decision | When | Action |
 | --- | --- | --- |
 | **pre-work** | Anything a worker can research: a data question, an investigation, a review, a support question to my team, a "can you look at <link>", a ticket assigned to me, and decisions that depend on facts (the worker gathers them and recommends; I decide). | Route it (below): send it to the thread that already owns this work, or launch a new worker. |
-| **brief-only** | A judgment call with nothing to look up: priorities, politics, scheduling, a yes/no I can answer from memory. | One-paragraph note: what is being decided, options, deadline. No worker. |
-| **follow-up** | Anything that continues work a thread already owns (a reply, a comment, new information, a nudge), wherever it arrived. | Send it to that thread with `t3_thread_send`, quoted, with its source link. |
+| **brief-only** | A judgment call with nothing to look up and no thread that owns the work: priorities, politics, scheduling, a yes/no I can answer from memory. | One-paragraph note: what is being decided, options, deadline. No worker. |
+| **follow-up** | Anything that continues work a thread already owns (a reply, a comment, new information, a nudge, a handoff, someone's next step on it), wherever it arrived. | Send it to that thread with `t3_thread_send`, quoted, with its source link. |
 | **remind** | People, HR, performance, compensation, health, or anything confidential. | One line: who, what, when. Never a worker, never a summary of the content. |
 | **ignore** | FYIs, acks, thanks, emoji-only, automated notices, my own messages, chatter that asks nothing of me. | One line with the reason. |
 
@@ -40,7 +40,17 @@ Guidelines (each source's section adds its own):
 - Several messages about one thing are one item, even across a DM, a channel thread, and a ticket.
   Decide what belongs together by what the messages are about, not by where or when they arrived.
 - Progress or closeout comments on tickets I reported ("merged", "done", "deployed") are FYIs:
-  ignore unless they ask me something or something looks wrong.
+  ignore unless they ask me something, hand off or propose next work, or something looks wrong.
+- Follow-up wins over brief-only and ignore when a message changes work a thread already owns:
+  who does what (a handoff, someone picking up or proposing their next ticket, someone free after
+  finishing theirs) or the order of that work. "Done with X, next I'll take Y, let me know if I
+  should prioritize something else" is a proposal for the next piece of work, not chatter: send it
+  to the thread that plans that work, quoted, so it checks the current assignments before
+  anything is assigned and proposes my answer. It researches and proposes; it does not assign or
+  post. Split a mixed message: the closeout half needs nothing, the proposal half is the item.
+- A priority call stays brief-only only when no thread owns the work and there is nothing to look
+  up. Availability here means capacity on the work (finished, free, blocked), not time off,
+  health, or personal reasons, which keep their usual handling (ignore or remind).
 - When unsure between pre-work and brief-only, choose pre-work: research is cheap, my time is not.
 - Except for the progress and closeout comments above, "someone else is on it" or "already done"
   is not a reason to ignore when the subject is a system, decision, or request I own: pre-work to
