@@ -204,8 +204,9 @@ The bridge also remembers the conversation of every message from someone else it
 saved items included (a Slack thread by its source key; a DM or group DM as a whole,
 `slack:<channel>`), in `bridge-conversations.json` for 14 days after the last one. An owner's
 message in a conversation it does not know also gets `"conversation_known": false` (flag
-`new conversation` in the digest, `(conversation new to qitt)` in the log): no thread can be working
-on it yet, so qitt only looks for a thread that drafted the text. Known ones get
+`new conversation` in the digest, `(conversation new to qitt)` in the log): the bridge never sent
+qitt anything from it, which does not prove no thread covers it, so qitt still looks for a thread
+that drafted the text or works on that place. Known ones get
 `"conversation_known": true`. Live events bring the owner's messages as they are posted; search
 catches up the ones they miss in DMs (`is:dm`), threads (`is:thread with:<@me>`) and watched
 channels (`in:<#channel>`), and the reconciler (`from:<@me>`) the rest, 15 to 30 minutes later.

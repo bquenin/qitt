@@ -67,7 +67,7 @@ item: never triage or ignore it.
 1. Find the threads it may belong to, here and on every peer environment, in each project local
    context lists (yours, the workers', my hand-work projects): `t3_thread_search` covers one project
    per call, settled threads included. Threads I started by hand count.
-   - The thread whose source is that Slack conversation (not for `new conversation`).
+   - The thread whose source is that Slack conversation, or one working on that place.
    - Threads that proposed this text: search a distinctive phrase of my message.
    - Threads that saved a draft in that place: search `draft` with the channel name (`#<channel>`),
      or the person's name for a DM, and keep threads that mention an unsent draft there shortly
@@ -87,7 +87,8 @@ item: never triage or ignore it.
 3. Otherwise, only if the thread working on that conversation is still running or ready for me (it
    may propose a reply I already gave), send it with `t3_thread_send`: "<my first name> replied in
    [#channel](permalink) at <time TZ>:" and my message quoted. My replies to the same thread in one
-   batch go in one message. A `new conversation` has no such thread.
+   batch go in one message. For a `new conversation` the bridge never sent you that conversation,
+   but a thread may still work on it (one I started by hand): look for it the same way.
 4. Otherwise do nothing and say nothing: the thread sees my reply when it next reads the
    conversation. Most of my messages end here.
 
