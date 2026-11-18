@@ -7,11 +7,13 @@ import { normalize } from "./normalize.mjs";
 // Returns a handler that resolves to the reason the event was kept or skipped (for tests).
 // delivered remembers the message ids already batched (lib/delivered.mjs persists them once the
 // batch is flushed). muted (a Muted) is optional: kept messages in a muted conversation are dropped
-// unless they mention me personally. conversations (a Conversations) is optional: with it, a
-// message of mine in a conversation qitt has heard about and not muted is batched flagged my_reply,
-// so the thread working on it (or the one that drafted it) learns I answered; without it my
-// messages are always dropped. Slack cannot tell a sent draft from a typed message, so qitt finds
-// the drafting thread by the text.
+// unless they mention me personally. conversations (a Conversations) is optional: with it, every
+// message of mine outside a muted conversation is batched flagged my_reply, so the thread that
+// drafted it, or the one working on that conversation, learns I posted; without it my messages are
+// always dropped. Slack cannot tell a sent draft from a typed message, and a draft can start a
+// conversation qitt never heard about (a top-level post, a first DM) or answer a thread it never
+// saw, so qitt finds the drafting thread by the text. conversation_known says whether qitt heard
+// about the conversation, so it knows whether a thread can already be working on it.
 export const createPipeline = ({ cfg, threads, directory, batcher, muted, conversations, log = () => {}, limit = 5000, delivered = new Recent(limit) }) => {
   const eventIds = new Recent(limit);
   return async (body) => {
@@ -20,11 +22,12 @@ export const createPipeline = ({ cfg, threads, directory, batcher, muted, conver
     if (event?.type !== "message") return "not a message";
     if (event.user === cfg.me) {
       threads.noteMine(event);
-      if (conversations?.knows(event) && !contentDrop(event, cfg) && !muted?.match(event)) {
+      if (conversations && !contentDrop(event, cfg) && !muted?.match(event)) {
         const id = `slack:${event.channel}:${event.ts}`;
         if (!delivered.remember(id, event.ts)) return "duplicate message";
-        batcher.add({ ...(await normalize(event, cfg, directory)), my_reply: true });
-        log(`my reply ${id}`);
+        const known = conversations.knows(event);
+        batcher.add({ ...(await normalize(event, cfg, directory)), my_reply: true, conversation_known: known });
+        log(`my reply ${id}${known ? "" : " (conversation new to qitt)"}`);
         return "my reply";
       }
     }

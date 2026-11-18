@@ -8,6 +8,7 @@ import { Muted, writeMuted } from "../lib/muted.mjs";
 import { ThreadTracker } from "../lib/filter.mjs";
 import { Directory } from "../lib/normalize.mjs";
 import { createPipeline } from "../lib/pipeline.mjs";
+import { matchEvent } from "../lib/search.mjs";
 import { cfg, message, slackStub } from "./helpers.mjs";
 
 const setup = (client = slackStub(), overrides = {}, muted = undefined) => {
@@ -190,7 +191,7 @@ describe("pipeline", () => {
         log: (line) => lines.push(line),
       });
       let n = 0;
-      const envelope = (event) => ({ type: "event_callback", event_id: `Ev${++n}`, event });
+      const envelope = (event, eventId = `Ev${++n}`) => ({ type: "event_callback", event_id: eventId, event });
       return { added, lines, handle, envelope };
     };
     const theirs = message({ text: "<@U000ME> can you look?", ts: "1760648000.000100" });
@@ -203,6 +204,7 @@ describe("pipeline", () => {
       assert.equal(await handle(envelope(mine())), "duplicate message");
       assert.equal(added.length, 2);
       assert.equal(added[1].my_reply, true);
+      assert.equal(added[1].conversation_known, true);
       assert.equal(added[1].source_key, "slack:C000TEAM:1760648000.000100");
       assert.deepEqual(lines, ["my reply slack:C000TEAM:1760648800.000100"]);
     });
@@ -223,14 +225,79 @@ describe("pipeline", () => {
       assert.equal(added.length, 2);
     });
 
-    it("drops my messages in conversations qitt never heard about, and edits or deletes", async () => {
+    it("drops my edits, deletes, and other dropped subtypes", async () => {
       const { added, handle, envelope } = repliesSetup();
-      assert.equal(await handle(envelope(mine())), "from me");
-      assert.equal(await handle(envelope(mine({ ts: "1760648000.000100", thread_ts: undefined }))), "from me");
-      assert.equal(await handle(envelope(theirs)), "mentions me");
       assert.equal(await handle(envelope(mine({ ts: "1760648900.000100", subtype: "message_changed" }))), "from me");
       assert.equal(await handle(envelope(mine({ ts: "1760649000.000100", subtype: "message_deleted", text: "" }))), "from me");
+      assert.equal(await handle(envelope(mine({ ts: "1760649100.000100", subtype: "channel_join" }))), "from me");
+      assert.equal(added.length, 0);
+    });
+
+    // The 11/18 miss: a draft posted as a new top-level message in a (watched) channel. Its
+    // conversation is the message itself, so qitt could never have heard about it.
+    const posted = (fields = {}) =>
+      message({ user: "U000ME", channel: "C000WATCH", channel_type: "group", text: "<@U000NEIL> plugin 0.27.0 is on six live controllers", ts: "1795023833.874059", ...fields });
+
+    it("sends my top-level post in a conversation qitt never heard about, flagged conversation_known false", async () => {
+      const { added, lines, handle, envelope } = repliesSetup();
+      assert.equal(await handle(envelope(posted())), "my reply");
       assert.equal(added.length, 1);
+      assert.equal(added[0].my_reply, true);
+      assert.equal(added[0].conversation_known, false);
+      assert.equal(added[0].text, "<@U000NEIL> plugin 0.27.0 is on six live controllers");
+      assert.equal(added[0].source_key, "slack:C000WATCH:1795023833.874059");
+      assert.deepEqual(lines, ["my reply slack:C000WATCH:1795023833.874059 (conversation new to qitt)"]);
+    });
+
+    it("sends my reply in a thread qitt never saw, and a first DM", async () => {
+      const { added, handle, envelope } = repliesSetup();
+      assert.equal(await handle(envelope(mine())), "my reply");
+      assert.equal(await handle(envelope(message({ user: "U000ME", channel: "D000NEW", channel_type: "im", text: "hi Gary, one change", ts: "1760649200.000100" }))), "my reply");
+      assert.deepEqual(added.map((e) => [e.id, e.thread_ts, e.conversation_known]), [
+        ["slack:C000TEAM:1760648800.000100", "1760648000.000100", false],
+        ["slack:D000NEW:1760649200.000100", null, false],
+      ]);
+    });
+
+    it("sends my post once whichever path brings it: live twice, search, reconcile", async () => {
+      const { added, handle, envelope } = repliesSetup();
+      const event = posted();
+      assert.equal(await handle(envelope(event, "Ev1")), "my reply");
+      assert.equal(await handle(envelope(event, "Ev1")), "duplicate event");
+      assert.equal(await handle(envelope(event, "Ev2")), "duplicate message");
+      // Search (lib/search.mjs matchEvent) and the reconciler pass no event_id.
+      assert.equal(await handle({ event: { ...event, permalink: "https://example.invalid/p" } }), "duplicate message");
+      assert.equal(await handle({ event: { ...event, backfill: true } }), "duplicate message");
+      assert.equal(added.length, 1);
+    });
+
+    it("sends my top-level post when only search brings it (live event missed)", async () => {
+      const { added, handle } = repliesSetup();
+      const match = {
+        channel: { id: "C000WATCH", name: "team-agents", is_channel: true, is_private: true },
+        ts: "1795023833.874059",
+        user: "U000ME",
+        text: "<@U000NEIL> plugin 0.27.0 is on six live controllers",
+        permalink: "https://example.invalid/archives/C000WATCH/p1795023833874059",
+      };
+      assert.equal(await handle({ event: matchEvent(match) }), "my reply");
+      assert.deepEqual([added[0].id, added[0].channel_name, added[0].permalink, added[0].conversation_known], [
+        "slack:C000WATCH:1795023833.874059",
+        "team-agents",
+        "https://example.invalid/archives/C000WATCH/p1795023833874059",
+        false,
+      ]);
+    });
+
+    it("still drops my messages without a Conversations, and my top-level post in a muted channel", async () => {
+      const file = join(dir, "muted-channel.json");
+      writeMuted(file, new Map([["slack:C000WATCH", { at: "2025-10-16T21:00:00Z" }]]));
+      const { added, handle, envelope } = repliesSetup(new Muted({ file }));
+      assert.equal(await handle(envelope(posted())), "from me");
+      assert.equal(added.length, 0);
+      const plain = setup();
+      assert.equal(await plain.handle(plain.envelope(posted())), "from me");
+      assert.equal(plain.added.length, 0);
     });
 
     it("treats a whole DM as one conversation", async () => {
