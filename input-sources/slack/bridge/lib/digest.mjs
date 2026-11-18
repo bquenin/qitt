@@ -31,6 +31,8 @@ const flags = (e) => [
   e.mentions_group && "mentions my group",
   e.saved && (e.saved_at ? `saved ${e.saved_at}` : "saved"),
   e.my_reply && "my reply",
+  // A conversation qitt never heard about (a top-level post, a first DM): no thread works on it yet.
+  e.my_reply && e.conversation_known === false && "new conversation",
   e.support_channel && "support channel",
   e.backfill && "backfilled (missed by live events and search)",
   // Quoted, so a file name cannot pass for a flag or break the line.

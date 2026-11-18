@@ -5,8 +5,8 @@ task. Each numbered event is `id · author (user id) · time`, then where it was
 flags, the link, and the text quoted. The same batches also carry:
 
 - **Saved-for-later events**: flagged `saved`, or `unsaved` entries (Saved for later, below).
-- **My Slack replies**: flagged `my reply`, when I post in a conversation you already heard about,
-  typed myself or sent from a draft an agent wrote (My Slack replies, below).
+- **My Slack replies**: flagged `my reply`, every message I post in Slack outside a muted
+  conversation, typed myself or sent from a draft an agent wrote (My Slack replies, below).
 - **Bridge health events**: `bridge health · <kind>`, when the bridge may be losing or delaying
   messages (Bridge health, below).
 
@@ -57,25 +57,39 @@ with its thread and state.
 
 #### My Slack replies
 
-When I post in a conversation the bridge already sent you (the same Slack thread, or the same DM),
-my message arrives flagged `my reply`, usually within a minute. Slack does not say whether I typed
-it or sent a draft an agent wrote, and agents on my other machines (peer environments) draft too.
-It is not an intake item: never triage or ignore it.
+Every message I post in Slack outside a muted conversation arrives flagged `my reply`, usually
+within a minute (edits and deletes do not). It is flagged `new conversation` too when you never
+heard about that conversation: a top-level post, a first DM, a thread the bridge never sent you.
+Slack does not say whether I typed it or sent a draft an agent wrote, a draft can start a new
+conversation, and agents on my other machines (peer environments) draft too. It is not an intake
+item: never triage or ignore it.
 
-1. Find the thread it belongs to, here and on every peer environment: the thread whose source is
-   that Slack conversation, and any thread that proposed this text (`t3_thread_search` for a
-   distinctive phrase of my message). Threads I started by hand count.
-2. If a thread proposed this text (the same wording, or close to it with my edits), it was its
-   draft: send it there with `t3_thread_send`, "<my first name> sent your draft in
+1. Find the threads it may belong to, here and on every peer environment, in each project local
+   context lists (yours, the workers', my hand-work projects): `t3_thread_search` covers one project
+   per call, settled threads included. Threads I started by hand count.
+   - The thread whose source is that Slack conversation (not for `new conversation`).
+   - Threads that proposed this text: search a distinctive phrase of my message.
+   - Threads that saved a draft in that place: search `draft` with the channel name (`#<channel>`),
+     or the person's name for a DM, and keep threads that mention an unsent draft there shortly
+     before my message. A thread often describes its draft instead of quoting it, so compare what
+     it says the draft contains (people, tickets, numbers, topic) with my message.
+
+   A short ack or one-liner with nothing distinctive (thanks, ok, an emoji) skips the search: go to
+   step 3.
+2. If a thread proposed this text or saved a draft that matches it (the same wording, or close to
+   it with my edits), it was its draft: send it there with `t3_thread_send`, whatever the thread's
+   state (running, waiting, completed, settled), "<my first name> sent your draft in
    [#channel](permalink) at <time TZ>", then "as drafted" when the wording matches or only
-   formatting differs, or my text quoted when I changed it. On the board, the item moves to
-   **waiting on someone else**, unless its thread still has something for me.
+   formatting differs, or my text quoted when I changed it. Use `clientRequestId`
+   `qitt-sent-<channel id>-<ts>`, so the same message arriving twice notifies the thread once. On
+   the board, the item moves to **waiting on someone else**, unless its thread still has something
+   for me.
 3. Otherwise, only if the thread working on that conversation is still running or ready for me (it
    may propose a reply I already gave), send it with `t3_thread_send`: "<my first name> replied in
    [#channel](permalink) at <time TZ>:" and my message quoted. My replies to the same thread in one
-   batch go in one message.
+   batch go in one message. A `new conversation` has no such thread.
 4. Otherwise do nothing and say nothing: the thread sees my reply when it next reads the
-   conversation.
+   conversation. Most of my messages end here.
 
 In your batch reply, one line per reply you forwarded: `sent draft → [title](t3-thread://v1/<threadId>)`
 or `my reply → [title](t3-thread://v1/<threadId>)`.

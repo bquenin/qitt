@@ -137,5 +137,7 @@ describe("renderDigest", () => {
 
   it("flags my reply", () => {
     assert.equal(one(event({ my_reply: true }))[1], "   #team-alpha · my reply");
+    assert.equal(one(event({ my_reply: true, conversation_known: true }))[1], "   #team-alpha · my reply");
+    assert.equal(one(event({ my_reply: true, conversation_known: false }))[1], "   #team-alpha · my reply · new conversation");
   });
 });

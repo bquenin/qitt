@@ -193,16 +193,23 @@ until it restarts. Other errors are logged and retried on the next poll.
 ## The owner's replies
 
 The owner often answers a Slack thread directly, or sends a draft an agent wrote, while a thread
-here is still working on it, so qitt needs to hear about the reply. The bridge remembers the
-conversation of every message from someone else it batches for qitt, saved items included (a
-Slack thread by its source key; a DM or group DM as a whole, `slack:<channel>`), in
-`bridge-conversations.json` for 14 days after the last one. A message of the owner's in one of
-them (top level or reply; edits, deletes and the other dropped subtypes do not count) becomes the
-normal event for that message plus `"my_reply": true`, logged as `my reply slack:<channel>:<ts>`,
-and is batched right away like any other event. A muted conversation is skipped, and so is a
-conversation qitt never heard about, which is where most of the owner's messages go. Live events
-bring the replies as they are posted; search (`is:thread with:<@me>`, `is:dm`) catches up the ones
-they miss.
+here is still working on it, so qitt needs to hear about the reply. A draft can also start a
+conversation qitt never heard about: a top-level post in a channel, a first DM, or a reply in a
+thread the bridge never sent. So every message of the owner's (top level or reply; edits, deletes
+and the other dropped subtypes do not count) becomes the normal event for that message plus
+`"my_reply": true`, logged as `my reply slack:<channel>:<ts>`, and is batched right away like any
+other event. Only a muted conversation is skipped.
+
+The bridge also remembers the conversation of every message from someone else it batches for qitt,
+saved items included (a Slack thread by its source key; a DM or group DM as a whole,
+`slack:<channel>`), in `bridge-conversations.json` for 14 days after the last one. An owner's
+message in a conversation it does not know also gets `"conversation_known": false` (flag
+`new conversation` in the digest, `(conversation new to qitt)` in the log): no thread can be working
+on it yet, so qitt only looks for a thread that drafted the text. Known ones get
+`"conversation_known": true`. Live events bring the owner's messages as they are posted; search
+catches up the ones they miss in DMs (`is:dm`), threads (`is:thread with:<@me>`) and watched
+channels (`in:<#channel>`), and the reconciler (`from:<@me>`) the rest, 15 to 30 minutes later.
+Each message is sent once, whichever path brings it.
 
 Slack does not say whether a message was typed or sent from a draft, and agents on other machines
 draft too, so the bridge does not try to match drafts: qitt finds the thread that drafted a reply
@@ -334,7 +341,7 @@ fewer tokens. `events` stays in the body for `--dry-run` and tests. Each event b
 The second line is the place (`#<channel_name>`, `#<channel id>` when the name is unknown, `DM`,
 or `group DM`), the thread's source key for a reply (a top-level message's source key is its id),
 and only the flags that are true: `mentions me`, `mentions my group`, `saved`, `my reply`,
-`support channel`, `backfilled (missed by live events and search)`, `files: "<name>", ...` (names
+`new conversation` (with `my reply`, see The owner's replies), `support channel`, `backfilled (missed by live events and search)`, `files: "<name>", ...` (names
 quoted, so one cannot pass for a flag). A removal from saved for later is
 `N. <id> · unsaved (source key <key>)` and its link. A missing author is `(<user id>)` or
 `unknown author`; empty text has no quote. A health event is
